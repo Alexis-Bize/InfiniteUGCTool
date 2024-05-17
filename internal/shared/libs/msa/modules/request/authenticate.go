@@ -1,8 +1,9 @@
 package msa_request
 
 import (
-	"Infinite-Bookmarker/internal/shared/modules/errors"
 	"fmt"
+	"infinite-bookmarker/internal/shared/errors"
+	"infinite-bookmarker/internal/shared/modules/utilities/request"
 	"io"
 	"net/http"
 	"net/url"
@@ -10,7 +11,7 @@ import (
 	"strings"
 )
 
-func Authenticate(credentials LiveCredentials, options LivePreAuthOptions) (*http.Response, error) {
+func Authenticate(credentials LiveCredentials, options LiveClientAuthOptions) (*http.Response, error) {
 	preAuthResponse, err := preAuth(&options)
 	if err != nil {
 		return nil, err
@@ -27,7 +28,7 @@ func Authenticate(credentials LiveCredentials, options LivePreAuthOptions) (*htt
 		return nil, fmt.Errorf("%w: %s", errors.ErrInternal, err.Error())
 	}
 
-	for k, v := range GetBaseHeaders(map[string]string{
+	for k, v := range request.GetBaseHeaders(map[string]string{
 		"Cookie": preAuthResponse.Cookie,
 		"Content-Type": "application/x-www-form-urlencoded",
 	}) { req.Header.Set(k, v) }
@@ -40,26 +41,15 @@ func Authenticate(credentials LiveCredentials, options LivePreAuthOptions) (*htt
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %s", errors.ErrInternal, err.Error())
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode == 200 {
-		return nil, fmt.Errorf("%w: %s", errors.ErrAuthFailure, "The authentication has failed")
+		return nil, fmt.Errorf("%w: %s", errors.ErrAuthFailure, "the authentication has failed")
 	}
 
 	return resp, nil
-}
-
-func getAuthorizeUrl(clientId string, scope string, responseType string, redirectUri string, state string) string {
-	return fmt.Sprintf(
-		"https://login.live.com/oauth20_authorize.srf?client_id=%s&scope=%s&response_type=%s&redirect_uri=%s&state=%s&display=touch",
-		url.QueryEscape(clientId),
-		url.QueryEscape(scope),
-		url.QueryEscape(responseType),
-		url.QueryEscape(redirectUri),
-		url.QueryEscape(state),
-	)
 }
 
 func getMatchForIndex(body string, pattern *regexp.Regexp, index int) string {
@@ -71,8 +61,8 @@ func getMatchForIndex(body string, pattern *regexp.Regexp, index int) string {
 	return ""
 }
 
-func preAuth(options *LivePreAuthOptions) (*LivePreAuthResponse, error) {
-	url := getAuthorizeUrl(
+func preAuth(options *LiveClientAuthOptions) (*LivePreAuthResponse, error) {
+	url := BuildAuthorizeUrl(
 		options.ClientID,
 		options.Scope,
 		options.ResponseType,
@@ -85,7 +75,7 @@ func preAuth(options *LivePreAuthOptions) (*LivePreAuthResponse, error) {
 		return nil, fmt.Errorf("%w: %s", errors.ErrInternal, err.Error())
 	}
 
-	for k, v := range GetBaseHeaders(map[string]string{}) {
+	for k, v := range request.GetBaseHeaders(map[string]string{}) {
 		req.Header.Set(k, v)
 	}
 
@@ -102,12 +92,12 @@ func preAuth(options *LivePreAuthOptions) (*LivePreAuthResponse, error) {
 	}
 
 	cookie := strings.Join(resp.Header["Set-Cookie"], "; ")
-	ppftPattern := regexp.MustCompile(`sFTTag:'.*value="(.*)"\/>'`)
 	urlPostPattern := regexp.MustCompile(`urlPost:'([^']+)'`)
+	ppftPattern := regexp.MustCompile(`sFTTag:'.*value="(.*)"\/>'`)
 
 	matches := LivePreAuthMatchedParameters{
-		PPFT:    getMatchForIndex(string(body), ppftPattern, 1),
 		URLPost: getMatchForIndex(string(body), urlPostPattern, 1),
+		PPFT: getMatchForIndex(string(body), ppftPattern, 1),
 	}
 
 	if matches.PPFT == "" || matches.URLPost == "" {

@@ -1,6 +1,6 @@
 package msa_request
 
-type LivePreAuthOptions struct {
+type LiveClientAuthOptions struct {
 	ClientID		string
 	Scope			string
 	ResponseType	string

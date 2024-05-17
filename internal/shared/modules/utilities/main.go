@@ -2,13 +2,12 @@ package modules
 
 import (
 	"fmt"
-	"log"
 	"os/exec"
 	"runtime"
 )
 
 // https://gist.github.com/hyg/9c4afcd91fe24316cbf0
-func OpenBrowser(url string) {
+func OpenBrowser(url string) error {
 	var err error
 
 	switch runtime.GOOS {
@@ -22,7 +21,5 @@ func OpenBrowser(url string) {
 		err = fmt.Errorf("unsupported platform")
 	}
 
-	if err != nil {
-		log.Fatal(err)
-	}
+	return err
 }

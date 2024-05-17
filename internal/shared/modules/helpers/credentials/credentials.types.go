@@ -11,6 +11,6 @@ type SpartanTokenCredentials struct {
 }
 
 type Credentials struct {
-	User			UserCredentials
-	SpartanToken	SpartanTokenCredentials
+	User			UserCredentials `json:"user,omitempty"`
+	SpartanToken	SpartanTokenCredentials  `json:"spartan_token,omitempty"`
 }
