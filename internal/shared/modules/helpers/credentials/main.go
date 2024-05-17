@@ -20,7 +20,7 @@ func GetOrCreateCredentials(defaultCredentials Credentials) (Credentials, error)
 	}
 
 	if credentials == (Credentials{}) {
-		err := saveCredentials(defaultCredentials)
+		err := SaveCredentials(defaultCredentials)
 		if err != nil {
 			return Credentials{}, err
 		}
@@ -29,6 +29,34 @@ func GetOrCreateCredentials(defaultCredentials Credentials) (Credentials, error)
 	}
 
 	return credentials, nil
+}
+
+func SaveCredentials(credentials Credentials) error {
+	filePath, err := getCredentialsFilePath()
+	if err != nil {
+		return err
+	}
+
+	data, err := json.MarshalIndent(credentials, "", "  ")
+	if err != nil {
+		return fmt.Errorf("%w: %s", errors.ErrInternal, err.Error())
+	}
+
+	encrypt, err := crypto.Encrypt(data, nil)
+	if err != nil {
+		return fmt.Errorf("%w: %s", errors.ErrInternal, err.Error())
+	}
+
+	if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {
+		return fmt.Errorf("%w: %s", errors.ErrCredentialsDirectoryCreateFailure, err.Error())
+	}
+
+	err = os.WriteFile(filePath, encrypt, 0644)
+	if err != nil {
+		return fmt.Errorf("%w: %s", errors.ErrCredentialsWriteFailure, err.Error())
+	}
+
+	return nil
 }
 
 func loadCredentials() (Credentials, error) {
@@ -59,34 +87,6 @@ func loadCredentials() (Credentials, error) {
 	}
 
 	return credentials, nil
-}
-
-func saveCredentials(credentials Credentials) error {
-	filePath, err := getCredentialsFilePath()
-	if err != nil {
-		return err
-	}
-
-	data, err := json.MarshalIndent(credentials, "", "  ")
-	if err != nil {
-		return fmt.Errorf("%w: %s", errors.ErrInternal, err.Error())
-	}
-
-	encrypt, err := crypto.Encrypt(data, nil)
-	if err != nil {
-		return fmt.Errorf("%w: %s", errors.ErrInternal, err.Error())
-	}
-
-	if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {
-		return fmt.Errorf("%w: %s", errors.ErrCredentialsDirectoryCreateFailure, err.Error())
-	}
-
-	err = os.WriteFile(filePath, encrypt, 0644)
-	if err != nil {
-		return fmt.Errorf("%w: %s", errors.ErrCredentialsWriteFailure, err.Error())
-	}
-
-	return nil
 }
 
 func getCredentialsFilePath() (string, error) {

@@ -21,13 +21,14 @@ func Start() {
 	fmt.Println(hasUserCredentials)
 
 	a := app.New()
-	w := a.NewWindow(internal.GetConfig().Title)
+	w := a.NewWindow(internal.GetConfig().Title + " (" + internal.GetConfig().Version + ")")
 
 	w.Resize(fyne.Size{
 		Width: 720,
 		Height: 440,
 	})
-	
+
+	w.SetPadded(true)
 	w.SetFixedSize(true)
 	w.CenterOnScreen()
 
