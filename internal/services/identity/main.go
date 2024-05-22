@@ -7,6 +7,8 @@ import (
 	"infinite-bookmarker/internal/shared/modules/helpers/identity"
 	"os"
 	"time"
+
+	"github.com/charmbracelet/huh/spinner"
 )
 
 func GetActiveIdentity() (identity.Identity, error) {
@@ -36,7 +38,7 @@ func RefreshIdentityIfRequired(currentIdentity identity.Identity) (identity.Iden
 	}
 
 	if shouldRefresh {
-		os.Stdout.WriteString("⏳ Refreshing your active session...\n")
+		spinner.New().Title("Refreshing your active session...").Run()
 		profile, spartanToken, err := authService.AuthenticateWithCredentials(currentIdentity.User.Email, currentIdentity.User.Password)
 		if err != nil {
 			identity.SaveIdentity(identity.Identity{})

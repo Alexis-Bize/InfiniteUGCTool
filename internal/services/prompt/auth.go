@@ -9,7 +9,8 @@ import (
 	"net/mail"
 	"os"
 
-	"github.com/manifoldco/promptui"
+	"github.com/charmbracelet/huh"
+	"github.com/charmbracelet/huh/spinner"
 )
 
 func StartAuthFlow() error {
@@ -29,7 +30,8 @@ func StartAuthFlow() error {
 		return err
 	}
 
-	os.Stdout.WriteString("⏳ Authenticating...\n")
+	spinner.New().Title("Authenticating...").Run()
+	
 	profile, spartanToken, err := authService.AuthenticateWithCredentials(email, password)
 	if err != nil {
 		return err
@@ -41,38 +43,40 @@ func StartAuthFlow() error {
 }
 
 func requestIdentity() (string, string, error) {
-	os.Stdout.WriteString("👋 Hey there! Please authenticate using your Microsoft credentials to continue.\n")
+	var err error
+	var email string
+	var password string
 
-	prompt := promptui.Prompt{
-		Label: "📧 Email address",
-		Validate: func(input string) error {
+	os.Stdout.WriteString("👋 Hey there! Please authenticate using your Microsoft credentials to continue.\n")
+	
+	err = huh.NewInput().
+		Title("What's your email?").
+		Value(&email).
+		Validate(func (input string) error {
 			_, err := mail.ParseAddress(input)
 			if err != nil {
-				return errors.Format("specified email address is invalid", errors.ErrPrompt)
+				return errors.Format("specified email is invalid", errors.ErrPrompt)
 			}
 
 			return nil
-		},
-	}
+		}).Run()
 
-	email, err := prompt.Run()
 	if err != nil {
-		return "", "", err
+		return "", "", errors.Format(err.Error(), errors.ErrPrompt)
 	}
 
-	prompt = promptui.Prompt{
-		Label: "🔑 Password",
-		Mask: '*',
-		Validate: func(input string) error {
+	err = huh.NewInput().
+		Title("What's your password?").
+		Password(true).
+		Value(&password).
+		Validate(func (input string) error {
 			if len(input) == 0 {
 				return errors.Format("password can not be empty", errors.ErrPrompt)
 			}
 
 			return nil
-		},
-	}
+		}).Run()
 
-	password, err := prompt.Run()
 	if err != nil {
 		return "", "", errors.Format(err.Error(), errors.ErrPrompt)
 	}

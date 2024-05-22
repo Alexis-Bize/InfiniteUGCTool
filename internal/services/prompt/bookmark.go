@@ -7,32 +7,36 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/manifoldco/promptui"
+	"github.com/charmbracelet/huh"
+	"github.com/charmbracelet/huh/spinner"
 )
 
 func DisplayBookmarkOptions() error {
-	prompt := promptui.Select{
-		Label: "Options",
-		Items: []string{
-			BOOKMARK_FILM,
-			GO_BACK,
-		},
-	}
+	var option string
+	err := huh.NewSelect[string]().
+		Title("What would like to do today?").
+		Options(
+			huh.NewOption(BOOKMARK_FILM, BOOKMARK_FILM),
+			huh.NewOption(GO_BACK, GO_BACK),
+		).Value(&option).Run()
 
-	_, result, err := prompt.Run()
+	if err != nil {
+		return errors.Format(err.Error(), errors.ErrPrompt)
+	}
+	
 	if err != nil {
 		return errors.Format(err.Error(), errors.ErrPrompt)
 	}
 
-	if result == GO_BACK {
+	if option == GO_BACK {
 		return DisplayBaseOptions()
 	}
 
-	if result == BOOKMARK_FILM {
+	if option == BOOKMARK_FILM {
 		matchID, err := DisplayBookmarkFilmPrompt()
 		if err != nil {
 			if errors.MayBe(err, errors.ErrMatchIdInvalid) {
-				os.Stdout.WriteString("❌ Invalid match ID or URL...\n")
+				os.Stdout.WriteString("❌ Seems like your match ID or URL were incorrect...\n")
 				return DisplayBookmarkOptions()
 			}
 
@@ -44,29 +48,32 @@ func DisplayBookmarkOptions() error {
 			return err
 		}
 
+		spinner.New().Title("Bookmarking...").Run()
+
 		err = halowaypointRequest.BookmarkFilmFromMatchID(currentIdentity.XboxNetwork.Xuid, currentIdentity.SpartanToken.Value, matchID)
 		if err != nil {
 			return err
 		}
 
 		os.Stdout.WriteString("🎉 Bookmarked with success!\n")
-		return DisplayBookmarkOptions()
+		return DisplayBaseOptions()
 	}
 
 	return nil
 }
 
 func DisplayBookmarkFilmPrompt() (string, error) {
-	prompt := promptui.Prompt{
-		Label: "Match ID or URL",
-	}
+	var value string
+	err := huh.NewInput().
+		Title("Please specify a match ID or a valid URL (Leafapp.co, SpartanRecord.com, HaloDataHive.com, etc.)").
+		Value(&value).
+		Run()
 
-	result, err := prompt.Run()
 	if err != nil {
 		return "", errors.Format(err.Error(), errors.ErrPrompt)
 	}
 
-	matchID, err := extractMatchID(result)
+	matchID, err := extractMatchID(value)
 	if err != nil {
 		return "", err
 	}
