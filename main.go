@@ -16,4 +16,6 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+
+	prompt.ProvideOptions()
 }

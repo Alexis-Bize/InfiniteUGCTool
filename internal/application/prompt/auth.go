@@ -21,15 +21,27 @@ func StartAuthFlow() error {
 
 	if currentIdentity != (identity.Identity{}) {
 		os.Stdout.WriteString(fmt.Sprintf("👋 Welcome back, %s!\n", currentIdentity.XboxNetwork.Gamertag))
-		os.Stdout.WriteString("⏳ Refreshing your active session...\n")
+		shouldRefreshCredentials := true
 
-		profile, spartanToken, err := auth.AuthenticateWithCredentials(currentIdentity.User.Email, currentIdentity.User.Password)
-		if err != nil {
-			return err
+		if (currentIdentity.SpartanToken.Expiration != "") {
+			parsedTime, err := time.Parse(time.RFC3339, currentIdentity.SpartanToken.Expiration)
+			if err == nil && time.Now().Before(parsedTime) {
+				shouldRefreshCredentials = false
+			}
 		}
 
-		os.Stdout.WriteString("✅ Your active session has been refreshed with success!\n")
-		return storeIdentity(currentIdentity.User.Email, currentIdentity.User.Password, profile, spartanToken)
+		if shouldRefreshCredentials {
+			os.Stdout.WriteString("⏳ Refreshing your active session...\n")
+			profile, spartanToken, err := auth.AuthenticateWithCredentials(currentIdentity.User.Email, currentIdentity.User.Password)
+			if err != nil {
+				return err
+			}
+
+			os.Stdout.WriteString("✅ Your active session has been refreshed with success!\n")
+			return storeIdentity(currentIdentity.User.Email, currentIdentity.User.Password, profile, spartanToken)
+		}
+
+		return nil
 	}
 
 	email, password, err := requestIdentity()
