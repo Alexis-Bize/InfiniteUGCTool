@@ -1,4 +1,4 @@
-package msa_request
+package msaRequest
 
 import (
 	"fmt"

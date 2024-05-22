@@ -1,4 +1,4 @@
-package msa_request
+package msaRequest
 
 type LiveClientAuthOptions struct {
 	ClientID		string

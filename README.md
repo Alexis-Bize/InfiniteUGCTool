@@ -5,3 +5,5 @@ A Halo Infinite bookmarking tool.
 ## Download
 
 ## Usage
+
+## Project Structure

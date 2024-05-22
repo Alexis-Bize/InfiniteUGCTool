@@ -1,4 +1,4 @@
-package halowaypoint_request
+package halowaypointRequest
 
 import (
 	"fmt"
