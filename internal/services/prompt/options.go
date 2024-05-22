@@ -1,13 +1,9 @@
 package promptService
 
 import (
-	"fmt"
-	"infinite-bookmarker/internal"
 	"infinite-bookmarker/internal/shared/errors"
 	"infinite-bookmarker/internal/shared/modules/helpers/identity"
 	"infinite-bookmarker/internal/shared/modules/utilities"
-	"os"
-	"strings"
 
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/huh/spinner"
@@ -54,18 +50,8 @@ func DisplayBaseOptions() error {
 }
 
 func DisplayCredits() error {
-	credits := []string {
-		fmt.Sprintf("%s (%s)", internal.GetConfig().Title, internal.GetConfig().Version),
-		"+ Made by: Zeny IC (x.com/@Zeny_IC)",
-		"+ Original idea: Okom (x.com/@_Okom)",
-		"+ Supporter: Grunt.API (x.com/@GruntDotAPI)",
-		"+ GitHub: github.com/Alexis-Bize/Infinite-Bookmarker",
-	}
-
-	os.Stdout.WriteString("\n" + strings.Join(credits, "\n") + "\n\n")
-
 	var option string
-	err := huh.NewSelect[string]().Title("Actions:").Options(
+	err := huh.NewSelect[string]().Title("Credits:").Options(
 		huh.NewOption(OPEN_X_1, OPEN_X_1),
 		huh.NewOption(OPEN_X_2, OPEN_X_2),
 		huh.NewOption(OPEN_X_3, OPEN_X_3),
