@@ -2,6 +2,7 @@ package modules
 
 import (
 	"fmt"
+	"infinite-bookmarker/internal/shared/errors"
 	"os/exec"
 	"runtime"
 )
@@ -21,5 +22,9 @@ func OpenBrowser(url string) error {
 		err = fmt.Errorf("unsupported platform")
 	}
 
-	return err
+	if err != nil {
+		return errors.Format(err.Error(), errors.ErrInternal)
+	}
+
+	return nil
 }

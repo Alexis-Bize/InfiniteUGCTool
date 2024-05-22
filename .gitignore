@@ -6,9 +6,6 @@
 # testing
 /coverage
 
-# production
-/internal/application
-
 # misc
 .vscode
 .DS_Store

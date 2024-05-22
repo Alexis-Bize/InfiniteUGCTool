@@ -2,7 +2,6 @@ package halowaypointRequest
 
 import (
 	"encoding/json"
-	"fmt"
 	"infinite-bookmarker/internal/shared/errors"
 	"infinite-bookmarker/internal/shared/libs/halowaypoint"
 	"infinite-bookmarker/internal/shared/modules/utilities/request"
@@ -14,7 +13,7 @@ func GetUserProfile(spartanToken string) (UserProfileResponse, error) {
 	url := request.ComputeUrl(halowaypoint.GetConfig().Urls.Profile, "/users/me")
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return UserProfileResponse{}, fmt.Errorf("%w: %s", errors.ErrInternal, err.Error())
+		return UserProfileResponse{}, errors.Format(err.Error(), errors.ErrInternal)
 	}
 
 	for k, v := range request.GetBaseHeaders(map[string]string{
@@ -25,23 +24,23 @@ func GetUserProfile(spartanToken string) (UserProfileResponse, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return UserProfileResponse{}, fmt.Errorf("%w: %s", errors.ErrInternal, err.Error())
+		return UserProfileResponse{}, errors.Format(err.Error(), errors.ErrInternal)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return UserProfileResponse{}, fmt.Errorf("%w: %s", errors.ErrSpartanTokenInvalid, "current STv4 is invalid or has expired")
+		return UserProfileResponse{}, errors.Format("current STv4 is invalid or has expired", errors.ErrSpartanTokenInvalid)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return UserProfileResponse{}, fmt.Errorf("%w: %s", errors.ErrInternal, err.Error())
+		return UserProfileResponse{}, errors.Format(err.Error(), errors.ErrInternal)
 	}
 
 	var user UserProfileResponse
 
 	if err := json.Unmarshal(body, &user); err != nil {
-		return UserProfileResponse{}, fmt.Errorf("%w: %s", errors.ErrInternal, err.Error())
+		return UserProfileResponse{}, errors.Format(err.Error(), errors.ErrInternal)
 	}
 
 	return user, nil

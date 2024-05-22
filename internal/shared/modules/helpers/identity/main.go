@@ -2,7 +2,6 @@ package identity
 
 import (
 	"encoding/json"
-	"fmt"
 	"infinite-bookmarker/internal"
 	"infinite-bookmarker/internal/shared/errors"
 	"infinite-bookmarker/internal/shared/modules/crypto"
@@ -39,21 +38,21 @@ func SaveIdentity(identity Identity) error {
 
 	data, err := json.MarshalIndent(identity, "", "  ")
 	if err != nil {
-		return fmt.Errorf("%w: %s", errors.ErrInternal, err.Error())
+		return errors.Format(err.Error(), errors.ErrInternal)
 	}
 
 	encrypt, err := crypto.Encrypt(data, nil)
 	if err != nil {
-		return fmt.Errorf("%w: %s", errors.ErrInternal, err.Error())
+		return errors.Format(err.Error(), errors.ErrInternal)
 	}
 
 	if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {
-		return fmt.Errorf("%w: %s", errors.ErrIdentityDirectoryCreateFailure, err.Error())
+		return errors.Format(err.Error(), errors.ErrIdentityDirectoryCreateFailure)
 	}
 
 	err = os.WriteFile(filePath, encrypt, 0644)
 	if err != nil {
-		return fmt.Errorf("%w: %s", errors.ErrIdentityWriteFailure, err.Error())
+		return errors.Format(err.Error(), errors.ErrIdentityWriteFailure)
 	}
 
 	return nil
@@ -73,7 +72,7 @@ func loadIdentity() (Identity, error) {
 			return identity, nil
 		}
 
-		return identity, fmt.Errorf("%w: %s", errors.ErrIdentityReadFailure, err.Error())
+		return identity, errors.Format(err.Error(), errors.ErrIdentityReadFailure)
 	}
 
 	decrypt, err := crypto.Decrypt(data, nil)
@@ -83,7 +82,7 @@ func loadIdentity() (Identity, error) {
 
 	err = json.Unmarshal(decrypt, &identity)
 	if err != nil {
-		return identity, fmt.Errorf("%w: %s", errors.ErrInternal, err.Error())
+		return identity, errors.Format(err.Error(), errors.ErrInternal)
 	}
 
 	return identity, nil
@@ -92,7 +91,7 @@ func loadIdentity() (Identity, error) {
 func getIdentityFilePath() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return "", fmt.Errorf("%w: %s", errors.ErrInternal, err.Error())
+		return "", errors.Format(err.Error(), errors.ErrInternal)
 	}
 
 	return filepath.Join(homeDir, strings.ReplaceAll(strings.ToLower(internal.GetConfig().Title), " ", "-"), fileName), nil

@@ -1,14 +1,22 @@
 package errors
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 var (
-	ErrInternal = errors.New("INTERNAL_ERROR")
-	ErrAuthFailure = errors.New("ACCOUNT_AUTH_FAILURE")
-	ErrPreAuthFailure = errors.New("PRE_AUTH_FAILURE")
-	ErrSpartanTokenGrabFailure = errors.New("SPARTAN_TOKEN_GRAB_FAILURE")
-	ErrSpartanTokenInvalid = errors.New("SPARTAN_TOKEN_INVALID")
-	ErrIdentityReadFailure = errors.New("IDENTITY_READ_ERROR")
-	ErrIdentityWriteFailure = errors.New("IDENTITY_WRITE_ERROR")
-	ErrIdentityDirectoryCreateFailure = errors.New("IDENTITY_CREATE_DIRECTORY_ERROR")
+	ErrPrompt = errors.New("invalid prompt")
+	ErrInternal = errors.New("internal error")
+	ErrAuthFailure = errors.New("account auth failure")
+	ErrPreAuthFailure = errors.New("pre authentication failure")
+	ErrSpartanTokenGrabFailure = errors.New("spartan token grab failure")
+	ErrSpartanTokenInvalid = errors.New("spartan token invalid")
+	ErrIdentityReadFailure = errors.New("identity read error")
+	ErrIdentityWriteFailure = errors.New("identity write error")
+	ErrIdentityDirectoryCreateFailure = errors.New("indentity create directory failure")
 )
+
+func Format(message string, err error) error {
+	return fmt.Errorf("%s: %s", err.Error(), message)
+}

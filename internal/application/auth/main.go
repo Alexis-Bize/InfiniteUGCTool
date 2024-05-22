@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"fmt"
 	"infinite-bookmarker/internal/shared/errors"
 	halowaypointRequest "infinite-bookmarker/internal/shared/libs/halowaypoint/modules/request"
 	msaRequest "infinite-bookmarker/internal/shared/libs/msa/modules/request"
@@ -30,18 +29,18 @@ func AuthenticateWithCredentials(email string, password string) (halowaypointReq
 	location := resp.Header.Get("Location")
 
 	if location == "" {
-		return halowaypointRequest.UserProfileResponse{}, "", fmt.Errorf("%w: %s", errors.ErrInternal, "something went wrong")
+		return halowaypointRequest.UserProfileResponse{}, "", errors.Format("something went wrong", errors.ErrInternal)
 	}
 
 	spartanToken, err := halowaypointRequest.ExtractSpartanTokenPostCallback(location)
 	if err != nil {
-		return halowaypointRequest.UserProfileResponse{}, "",  err
+		return halowaypointRequest.UserProfileResponse{}, "", err
 	}
 
 	profile, err := halowaypointRequest.GetUserProfile(spartanToken)
 	if err != nil {
 		return halowaypointRequest.UserProfileResponse{}, "", err
 	}
-	
+
 	return profile, spartanToken, nil
 }

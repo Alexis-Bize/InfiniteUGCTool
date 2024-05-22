@@ -1,7 +1,6 @@
 package msaRequest
 
 import (
-	"fmt"
 	"infinite-bookmarker/internal/shared/errors"
 	"infinite-bookmarker/internal/shared/modules/utilities/request"
 	"io"
@@ -25,7 +24,7 @@ func Authenticate(credentials LiveCredentials, options LiveClientAuthOptions) (*
 
 	req, err := http.NewRequest("POST", preAuthResponse.Matches.URLPost, strings.NewReader(form.Encode()))
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrInternal, err.Error())
+		return nil, errors.Format(err.Error(), errors.ErrInternal)
 	}
 
 	for k, v := range request.GetBaseHeaders(map[string]string{
@@ -41,12 +40,12 @@ func Authenticate(credentials LiveCredentials, options LiveClientAuthOptions) (*
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrInternal, err.Error())
+		return nil, errors.Format(err.Error(), errors.ErrInternal)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode == 200 {
-		return nil, fmt.Errorf("%w: %s", errors.ErrAuthFailure, "the authentication has failed")
+		return nil, errors.Format("the authentication has failed", errors.ErrAuthFailure)
 	}
 
 	return resp, nil
@@ -72,7 +71,7 @@ func preAuth(options *LiveClientAuthOptions) (*LivePreAuthResponse, error) {
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrInternal, err.Error())
+		return nil, errors.Format(err.Error(), errors.ErrInternal)
 	}
 
 	for k, v := range request.GetBaseHeaders(map[string]string{}) {
@@ -82,13 +81,13 @@ func preAuth(options *LiveClientAuthOptions) (*LivePreAuthResponse, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrInternal, err.Error())
+		return nil, errors.Format(err.Error(), errors.ErrInternal)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrInternal, err.Error())
+		return nil, errors.Format(err.Error(), errors.ErrInternal)
 	}
 
 	cookie := strings.Join(resp.Header["Set-Cookie"], "; ")
@@ -101,7 +100,7 @@ func preAuth(options *LiveClientAuthOptions) (*LivePreAuthResponse, error) {
 	}
 
 	if matches.PPFT == "" || matches.URLPost == "" {
-		return nil, fmt.Errorf("%w: %s", errors.ErrPreAuthFailure, "please retry in a few seconds...")
+		return nil, errors.Format("please retry in a few seconds", errors.ErrPreAuthFailure)
 	}
 
 	return &LivePreAuthResponse{

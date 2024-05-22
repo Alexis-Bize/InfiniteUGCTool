@@ -4,7 +4,6 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"fmt"
 	"infinite-bookmarker/internal/shared/errors"
 	"io"
 	"os"
@@ -42,11 +41,11 @@ func Decrypt(ciphertext []byte, key []byte) ([]byte, error) {
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrInternal, err.Error())
+		return nil, errors.Format(err.Error(), errors.ErrInternal)
 	}
 
 	if len(ciphertext) < aes.BlockSize {
-		return nil, fmt.Errorf("%w: %s", errors.ErrInternal, "ciphertext too short")
+		return nil, errors.Format("ciphertext too short", errors.ErrInternal)
 	}
 
 	iv := ciphertext[:aes.BlockSize]
@@ -64,7 +63,7 @@ func getLocalKey() []byte {
 	if err != nil {
 		return fixKeyLength([]byte(runtime.GOOS))
 	}
-	
+
 	return fixKeyLength([]byte(hostname))
 }
 
