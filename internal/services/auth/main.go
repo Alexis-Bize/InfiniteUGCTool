@@ -8,17 +8,23 @@ import (
 	msaRequest "infinite-bookmarker/internal/shared/libs/msa/modules/request"
 )
 
+var defaultAuthOptions = msa.LiveClientAuthOptions{
+	ClientID: "000000004C0BD2F1",
+	Scope: "xboxlive.signin xboxlive.offline_access",
+	ResponseType: "code",
+	RedirectURI: "https://www.halowaypoint.com/sign-in/callback",
+	State: "/",
+}
+
+func GetDefaultAuthOptions() msa.LiveClientAuthOptions {
+	return defaultAuthOptions
+}
+
 func AuthenticateWithCredentials(email string, password string) (halowaypoint.UserProfileResponse, string, error) {
 	resp, err := msaRequest.Authenticate(msa.LiveCredentials{
 		Email: email,
 		Password: password,
-	}, msa.LiveClientAuthOptions{
-		ClientID: "000000004C0BD2F1",
-		Scope: "xboxlive.signin xboxlive.offline_access",
-		ResponseType: "code",
-		RedirectURI: "https://www.halowaypoint.com/sign-in/callback",
-		State: "/",
-	})
+	}, defaultAuthOptions)
 
 	if err != nil {
 		return halowaypoint.UserProfileResponse{}, "", err

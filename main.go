@@ -4,15 +4,21 @@ import (
 	"fmt"
 	"infinite-bookmarker/internal"
 	promptService "infinite-bookmarker/internal/services/prompt"
+	"infinite-bookmarker/internal/shared/errors"
 	"os"
 )
 
 func main() {
-	title := fmt.Sprintf("%s (%s)\n", internal.GetConfig().Title, internal.GetConfig().Version)
-	os.Stdout.WriteString(title)
+	var err error
+	os.Stdout.WriteString(fmt.Sprintf("%s (%s)\n", internal.GetConfig().Title, internal.GetConfig().Version))
 
-	err := promptService.StartAuthFlow()
+	err = promptService.StartAuthFlow()
 	if err != nil {
+		if errors.MayBe(err, errors.ErrAuthFailure) {
+			promptService.DisplayAskOpenAuth()
+			return
+		}
+		
 		fmt.Println(err)
 		return
 	}
