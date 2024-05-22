@@ -2,6 +2,7 @@ package msaRequest
 
 import (
 	"infinite-bookmarker/internal/shared/errors"
+	"infinite-bookmarker/internal/shared/libs/msa"
 	"infinite-bookmarker/internal/shared/modules/utilities/request"
 	"io"
 	"net/http"
@@ -10,7 +11,7 @@ import (
 	"strings"
 )
 
-func Authenticate(credentials LiveCredentials, options LiveClientAuthOptions) (*http.Response, error) {
+func Authenticate(credentials msa.LiveCredentials, options msa.LiveClientAuthOptions) (*http.Response, error) {
 	preAuthResponse, err := preAuth(&options)
 	if err != nil {
 		return nil, err
@@ -60,7 +61,7 @@ func getMatchForIndex(body string, pattern *regexp.Regexp, index int) string {
 	return ""
 }
 
-func preAuth(options *LiveClientAuthOptions) (*LivePreAuthResponse, error) {
+func preAuth(options *msa.LiveClientAuthOptions) (*msa.LivePreAuthResponse, error) {
 	url := BuildAuthorizeUrl(
 		options.ClientID,
 		options.Scope,
@@ -94,7 +95,7 @@ func preAuth(options *LiveClientAuthOptions) (*LivePreAuthResponse, error) {
 	urlPostPattern := regexp.MustCompile(`urlPost:'([^']+)'`)
 	ppftPattern := regexp.MustCompile(`sFTTag:'.*value="(.*)"\/>'`)
 
-	matches := LivePreAuthMatchedParameters{
+	matches := msa.LivePreAuthMatchedParameters{
 		URLPost: getMatchForIndex(string(body), urlPostPattern, 1),
 		PPFT: getMatchForIndex(string(body), ppftPattern, 1),
 	}
@@ -103,7 +104,7 @@ func preAuth(options *LiveClientAuthOptions) (*LivePreAuthResponse, error) {
 		return nil, errors.Format("please retry in a few seconds", errors.ErrPreAuthFailure)
 	}
 
-	return &LivePreAuthResponse{
+	return &msa.LivePreAuthResponse{
 		Cookie:  cookie,
 		Matches: matches,
 	}, nil

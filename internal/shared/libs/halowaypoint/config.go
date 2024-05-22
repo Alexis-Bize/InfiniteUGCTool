@@ -16,7 +16,7 @@ func GetConfig() *Config {
 		Urls: urls{
 			Profile: "https://profile.svc.halowaypoint.com",
 			Settings: "https://settings.svc.halowaypoint.com",
-			Authoring: "https://authoring-infinite.svc.halowaypoint.com",
+			Authoring: "https://authoring-infiniteugc.svc.halowaypoint.com",
 		},
 		Title: "hi",
 	}

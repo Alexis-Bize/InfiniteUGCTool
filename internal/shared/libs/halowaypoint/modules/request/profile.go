@@ -9,11 +9,11 @@ import (
 	"net/http"
 )
 
-func GetUserProfile(spartanToken string) (UserProfileResponse, error) {
+func GetUserProfile(spartanToken string) (halowaypoint.UserProfileResponse, error) {
 	url := request.ComputeUrl(halowaypoint.GetConfig().Urls.Profile, "/users/me")
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return UserProfileResponse{}, errors.Format(err.Error(), errors.ErrInternal)
+		return halowaypoint.UserProfileResponse{}, errors.Format(err.Error(), errors.ErrInternal)
 	}
 
 	for k, v := range request.GetBaseHeaders(map[string]string{
@@ -24,23 +24,23 @@ func GetUserProfile(spartanToken string) (UserProfileResponse, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return UserProfileResponse{}, errors.Format(err.Error(), errors.ErrInternal)
+		return halowaypoint.UserProfileResponse{}, errors.Format(err.Error(), errors.ErrInternal)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return UserProfileResponse{}, errors.Format("current STv4 is invalid or has expired", errors.ErrSpartanTokenInvalid)
+		return halowaypoint.UserProfileResponse{}, errors.Format("current STv4 is invalid or has expired", errors.ErrSpartanTokenInvalid)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return UserProfileResponse{}, errors.Format(err.Error(), errors.ErrInternal)
+		return halowaypoint.UserProfileResponse{}, errors.Format(err.Error(), errors.ErrInternal)
 	}
 
-	var user UserProfileResponse
+	var user halowaypoint.UserProfileResponse
 
 	if err := json.Unmarshal(body, &user); err != nil {
-		return UserProfileResponse{}, errors.Format(err.Error(), errors.ErrInternal)
+		return halowaypoint.UserProfileResponse{}, errors.Format(err.Error(), errors.ErrInternal)
 	}
 
 	return user, nil
