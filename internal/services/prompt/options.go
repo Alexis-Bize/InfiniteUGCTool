@@ -3,9 +3,7 @@ package promptService
 import (
 	"fmt"
 	"infinite-bookmarker/internal"
-	authService "infinite-bookmarker/internal/services/auth"
 	"infinite-bookmarker/internal/shared/errors"
-	msaRequest "infinite-bookmarker/internal/shared/libs/msa/modules/request"
 	"infinite-bookmarker/internal/shared/modules/helpers/identity"
 	"infinite-bookmarker/internal/shared/modules/utilities"
 	"os"
@@ -99,24 +97,14 @@ func DisplayCredits() error {
 	return DisplayBaseOptions()
 }
 
-func DisplayAskOpenAuth() {
+func DisplayAskOpenAuth() bool {
 	var confirm bool
 	huh.NewConfirm().
-		Title("❌ The authentication has failed; would you like to open your browser to double check your credentials?").
+		Title("❌ The authentication has failed; would you like to retry?").
 		Affirmative("Yes, let's go!").
 		Negative("No thanks.").
 		Value(&confirm).
 		Run()
 
-	if confirm {
-		spinner.New().Title("Attempting to open your browser...").Run()
-		defaultAuthOptions := authService.GetDefaultAuthOptions()
-		utilities.OpenBrowser(msaRequest.BuildAuthorizeUrl(
-			defaultAuthOptions.ClientID,
-			defaultAuthOptions.Scope,
-			defaultAuthOptions.ResponseType,
-			defaultAuthOptions.RedirectURI,
-			defaultAuthOptions.State,
-		))
-	}
+	return confirm
 }

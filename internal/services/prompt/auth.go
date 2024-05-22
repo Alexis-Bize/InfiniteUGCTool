@@ -13,7 +13,7 @@ import (
 	"github.com/charmbracelet/huh/spinner"
 )
 
-func StartAuthFlow() error {
+func StartAuthFlow(isRetry bool) error {
 	currentIdentity, err := identity.GetOrCreateIdentity(identity.Identity{})
 	if err != nil {
 		return err
@@ -25,7 +25,7 @@ func StartAuthFlow() error {
 		return err
 	}
 
-	email, password, err := requestIdentity()
+	email, password, err := requestIdentity(isRetry)
 	if err != nil {
 		return err
 	}
@@ -42,12 +42,14 @@ func StartAuthFlow() error {
 	return nil
 }
 
-func requestIdentity() (string, string, error) {
+func requestIdentity(isRetry bool) (string, string, error) {
 	var err error
 	var email string
 	var password string
 
-	os.Stdout.WriteString("👋 Hey there! Please authenticate using your Microsoft credentials to continue.\n")
+	if !isRetry {
+		os.Stdout.WriteString("👋 Hey there! Please authenticate using your Microsoft credentials to continue.\n")
+	}
 	
 	err = huh.NewInput().
 		Title("What's your email?").
@@ -55,7 +57,7 @@ func requestIdentity() (string, string, error) {
 		Validate(func (input string) error {
 			_, err := mail.ParseAddress(input)
 			if err != nil {
-				return errors.Format("specified email is invalid", errors.ErrPrompt)
+				return errors.New("specified email is invalid")
 			}
 
 			return nil
@@ -71,7 +73,7 @@ func requestIdentity() (string, string, error) {
 		Value(&password).
 		Validate(func (input string) error {
 			if len(input) == 0 {
-				return errors.Format("password can not be empty", errors.ErrPrompt)
+				return errors.New("password can not be empty")
 			}
 
 			return nil

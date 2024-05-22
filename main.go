@@ -9,23 +9,28 @@ import (
 )
 
 func main() {
-	var err error
-	os.Stdout.WriteString(fmt.Sprintf("%s (%s)\n", internal.GetConfig().Title, internal.GetConfig().Version))
+	os.Stdout.WriteString(fmt.Sprintf("# %s (%s)\n", internal.GetConfig().Title, internal.GetConfig().Version))
 
-	err = promptService.StartAuthFlow()
+	err := exec(false)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func exec(isRetry bool) error {
+	var err error
+
+	err = promptService.StartAuthFlow(isRetry)
 	if err != nil {
 		if errors.MayBe(err, errors.ErrAuthFailure) {
-			promptService.DisplayAskOpenAuth()
-			return
+			if promptService.DisplayAskOpenAuth() {
+				return exec(true)
+			}
 		}
 		
-		fmt.Println(err)
-		return
+		return err
 	}
 
 	err = promptService.DisplayBaseOptions()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	return err
 }

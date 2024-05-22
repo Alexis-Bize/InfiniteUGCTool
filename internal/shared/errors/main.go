@@ -22,6 +22,10 @@ var (
 	ErrMatchIdInvalid = errors.New("invalid match id")
 )
 
+func New(message string) error {
+	return errors.New(message)
+}
+
 func Format(message string, err error) error {
 	return fmt.Errorf("%s: %s", err.Error(), message)
 }
