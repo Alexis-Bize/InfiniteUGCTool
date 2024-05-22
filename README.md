@@ -4,6 +4,22 @@ A Halo Infinite bookmarking tool.
 
 ## Download
 
-## Usage
+-   Windows
+-   MacOS
+-   Linux
 
 ## Project Structure
+
+-   internal
+    -   services
+    -   shared
+        -   libs
+        -   modules
+
+### Internal
+
+### Launcher
+
+## Licence
+
+MIT

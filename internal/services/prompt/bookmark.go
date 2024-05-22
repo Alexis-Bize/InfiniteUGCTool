@@ -31,6 +31,11 @@ func DisplayBookmarkOptions() error {
 	if result == BOOKMARK_FILM {
 		matchID, err := DisplayBookmarkFilmPrompt()
 		if err != nil {
+			if errors.MayBe(err, errors.ErrMatchIdInvalid) {
+				os.Stdout.WriteString("❌ Invalid match ID or URL...\n")
+				return DisplayBookmarkOptions()
+			}
+
 			return err
 		}
 
@@ -53,11 +58,7 @@ func DisplayBookmarkOptions() error {
 
 func DisplayBookmarkFilmPrompt() (string, error) {
 	prompt := promptui.Prompt{
-		Label: "Match ID or URL (e.g., d6f60558-a14f-40c3-9016-d9085f6ec152)",
-		Validate: func(input string) error {
-			_, err := extractMatchID(input)
-			return err
-		},
+		Label: "Match ID or URL",
 	}
 
 	result, err := prompt.Run()
@@ -82,5 +83,5 @@ func extractMatchID(value string) (string, error) {
 		return match, nil
 	}
 
-	return "", errors.Format("invalid match ID or URL", errors.ErrPrompt)
+	return "", errors.Format("please retry", errors.ErrMatchIdInvalid)
 }

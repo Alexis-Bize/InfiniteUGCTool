@@ -18,6 +18,7 @@ func DisplayBaseOptions() error {
 			BOOKMARK,
 			SHOW_CREDITS,
 			SIGN_OUT,
+			EXIT,
 		},
 	}
 
@@ -31,7 +32,7 @@ func DisplayBaseOptions() error {
 	} else if result == BOOKMARK {
 		return DisplayBookmarkOptions()
 	} else if result == SIGN_OUT {
-		os.Stdout.WriteString("👋 Good bye!")
+		os.Stdout.WriteString("Signing out...")
 		identity.SaveIdentity(identity.Identity{})
 	}
 
