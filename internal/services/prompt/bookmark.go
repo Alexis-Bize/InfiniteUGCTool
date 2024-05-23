@@ -31,7 +31,8 @@ func DisplayBookmarkOptions() error {
 	if option == BOOKMARK_FILM {
 		matchID, err := DisplayBookmarkFilmPrompt()
 		if err != nil {
-			return err
+			os.Stdout.WriteString("❌ Invalid match ID or URL...\n")
+			return DisplayBookmarkOptions()
 		}
 
 		currentIdentity, err := identityService.GetActiveIdentity()
@@ -43,12 +44,14 @@ func DisplayBookmarkOptions() error {
 
 		stats, err := halowaypointRequest.GetMatchStats(currentIdentity.SpartanToken.Value, matchID)
 		if err != nil {
-			return err
+			os.Stdout.WriteString("❌ Invalid match ID...\n")
+			return DisplayBookmarkOptions()
 		}
 
 		film, err := halowaypointRequest.GetMatchFilm(currentIdentity.SpartanToken.Value, matchID)
 		if err != nil {
-			return err
+			os.Stdout.WriteString("❌ Film not available...\n")
+			return DisplayBookmarkOptions()
 		}
 
 		os.Stdout.WriteString(strings.Join([]string{
@@ -68,7 +71,8 @@ func DisplayBookmarkOptions() error {
 
 		err = halowaypointRequest.BookmarkFilm(currentIdentity.XboxNetwork.Xuid, currentIdentity.SpartanToken.Value, film.AssetID)
 		if err != nil {
-			return err
+			os.Stdout.WriteString("❌ Failed to bookmark the desired file...\n")
+			return DisplayBookmarkOptions()
 		}
 
 		os.Stdout.WriteString("🎉 Bookmarked with success!\n")

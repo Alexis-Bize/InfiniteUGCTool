@@ -4,7 +4,6 @@ import (
 	"infinite-bookmarker/internal/shared/errors"
 	"infinite-bookmarker/internal/shared/modules/helpers/identity"
 	"infinite-bookmarker/internal/shared/modules/utilities"
-	"os"
 
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/huh/spinner"
@@ -28,11 +27,6 @@ func DisplayBaseOptions() error {
 	if option == SHOW_CREDITS {
 		return DisplayCredits()
 	} else if option == BOOKMARK {
-		err := DisplayBookmarkOptions()
-		if err != nil {
-			os.Stdout.WriteString("❌ Failed to bookmark the desired file...\n")
-		}
-
 		return DisplayBookmarkOptions()
 	} else if option == SIGN_OUT {
 		var confirm bool
