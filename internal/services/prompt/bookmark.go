@@ -16,8 +16,10 @@ import (
 func DisplayBookmarkOptions() error {
 	var option string
 	err := huh.NewSelect[string]().
-		Title("What would like to do today?").
+		Title("What would like to bookmark?").
 		Options(
+			huh.NewOption(BOOKMARK_MAP, BOOKMARK_MAP),
+			huh.NewOption(BOOKMARK_MODE, BOOKMARK_MODE),
 			huh.NewOption(BOOKMARK_FILM, BOOKMARK_FILM),
 			huh.NewOption(GO_BACK, GO_BACK),
 		).Value(&option).Run()
@@ -56,7 +58,7 @@ func DisplayBookmarkOptions() error {
 
 		os.Stdout.WriteString(strings.Join([]string{
 			fmt.Sprintf("Match Details (ID: %s)", stats.MatchID),
-			"│ Map",
+			"│ MapVariant",
 			fmt.Sprintf("├── Asset ID: %s", stats.MatchInfo.MapVariant.AssetID),
 			fmt.Sprintf("└── Version ID: %s", stats.MatchInfo.MapVariant.VersionID),
 			"│ UgcGameVariant",
@@ -85,7 +87,7 @@ func DisplayBookmarkOptions() error {
 func DisplayBookmarkFilmPrompt() (string, error) {
 	var value string
 	err := huh.NewInput().
-		Title("Please specify a match ID or a valid URL").
+		Title("Please specify a match ID or a valid match URL").
 		Description("Leafapp.co, SpartanRecord.com, HaloDataHive.com and such are supported").
 		Value(&value).
 		Run()
