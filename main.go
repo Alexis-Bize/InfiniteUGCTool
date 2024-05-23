@@ -13,7 +13,9 @@ func main() {
 
 	err := exec(false)
 	if err != nil {
-		fmt.Println(err)
+		if !errors.MayBe(err, errors.ErrPrompt) {
+			fmt.Println(err)
+		}
 	}
 }
 

@@ -10,10 +10,14 @@ import (
 	"net/http"
 )
 
-func BookmarkFilm(xuid string, spartanToken string, filmID string) error {
-	url := request.ComputeUrl(halowaypoint.GetConfig().Urls.Authoring, fmt.Sprintf("/hi/players/xuid(%s)/favorites/films/%s", xuid, filmID))
-
+func Bookmark(xuid string, spartanToken string, category string, assetID string, assetVersionID string) error {
+	url := request.ComputeUrl(halowaypoint.GetConfig().Urls.Authoring, fmt.Sprintf("/hi/players/xuid(%s)/favorites/%s/%s", xuid, category, assetID))
 	payload := map[string]interface{}{}
+
+	if assetVersionID != "" {
+		payload["AssetVersionId"] = assetVersionID
+	}
+
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		return errors.Format(err.Error(), errors.ErrInternal)

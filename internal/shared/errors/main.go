@@ -19,7 +19,7 @@ var (
 	ErrIdentityWriteFailure = errors.New("identity write error")
 	ErrIdentityMissing= errors.New("missing identity")
 	ErrIdentityDirectoryCreateFailure = errors.New("indentity create directory failure")
-	ErrMatchIdInvalid = errors.New("invalid match id")
+	ErrUUIDInvalid = errors.New("invalid UUID")
 )
 
 func New(message string) error {
