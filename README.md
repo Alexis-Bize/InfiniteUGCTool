@@ -8,7 +8,7 @@ Currently only matches (films) are supported.
 
 ## Installation
 
-Download and unzip one of the files from the [latest release](/releases/latest) for your current OS.
+Download and unzip one of the files from the [latest release](./releases/latest) for your current OS.
 
 ## Build
 
