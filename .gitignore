@@ -19,5 +19,4 @@ yarn-debug.log*
 yarn-error.log*
 
 # application
-Infinite-Bookmarker
-Infinite-Bookmarker.*
+builds/*
