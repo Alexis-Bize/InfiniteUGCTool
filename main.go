@@ -27,7 +27,7 @@ func exec(isRetry bool) error {
 				return exec(true)
 			}
 		}
-		
+
 		return err
 	}
 

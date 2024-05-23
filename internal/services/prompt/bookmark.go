@@ -24,7 +24,7 @@ func DisplayBookmarkOptions() error {
 	if err != nil {
 		return errors.Format(err.Error(), errors.ErrPrompt)
 	}
-	
+
 	if err != nil {
 		return errors.Format(err.Error(), errors.ErrPrompt)
 	}
@@ -66,7 +66,8 @@ func DisplayBookmarkOptions() error {
 func DisplayBookmarkFilmPrompt() (string, error) {
 	var value string
 	err := huh.NewInput().
-		Title("Please specify a match ID or a valid URL (Leafapp.co, SpartanRecord.com, HaloDataHive.com, etc.)").
+		Title("Please specify a match ID or a valid URL").
+		Description("Leafapp.co, SpartanRecord.com, HaloDataHive.com and such are supported").
 		Value(&value).
 		Run()
 
