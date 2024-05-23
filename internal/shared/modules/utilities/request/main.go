@@ -1,10 +1,10 @@
-package halowaypoint_request
+package request
 
-import "Infinite-Bookmarker/internal/shared"
+import "strings"
 
 func GetBaseHeaders(extraHeaders map[string]string) map[string]string {
 	headers := map[string]string{
-		"User-Agent": shared.RequestUserAgent,
+		"User-Agent": RequestUserAgent,
 		"Accept-Encoding": "identity",
 	}
 
@@ -13,4 +13,12 @@ func GetBaseHeaders(extraHeaders map[string]string) map[string]string {
 	}
 
 	return headers
+}
+
+func ComputeUrl(baseUrl string, path string) string {
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
+
+	return baseUrl + path
 }

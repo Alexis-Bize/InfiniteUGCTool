@@ -1,18 +1,36 @@
 package main
 
 import (
-	auth_service "Infinite-Bookmarker/internal/application/services/auth"
 	"fmt"
-	"log"
+	"infinite-bookmarker/internal"
+	promptService "infinite-bookmarker/internal/services/prompt"
+	"infinite-bookmarker/internal/shared/errors"
+	"os"
 )
 
-// WIP / DEBUG
 func main() {
-	// Provide a config file to store user credentials
-	spartanToken, err := auth_service.Authenticate("your_email", "your_password")
+	os.Stdout.WriteString(fmt.Sprintf("# %s (%s)\n", internal.GetConfig().Title, internal.GetConfig().Version))
+
+	err := exec(false)
 	if err != nil {
-		log.Panic(err)
+		fmt.Println(err)
+	}
+}
+
+func exec(isRetry bool) error {
+	var err error
+
+	err = promptService.StartAuthFlow(isRetry)
+	if err != nil {
+		if errors.MayBe(err, errors.ErrAuthFailure) {
+			if promptService.DisplayAskOpenAuth() {
+				return exec(true)
+			}
+		}
+		
+		return err
 	}
 
-	fmt.Println(spartanToken)
+	err = promptService.DisplayBaseOptions()
+	return err
 }

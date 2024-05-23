@@ -1,8 +1,8 @@
-package halowaypoint_request
+package halowaypointRequest
 
 import (
-	"Infinite-Bookmarker/internal/shared/modules/errors"
-	"fmt"
+	"infinite-bookmarker/internal/shared/errors"
+	"infinite-bookmarker/internal/shared/modules/utilities/request"
 	"net/http"
 	"net/url"
 )
@@ -10,10 +10,10 @@ import (
 func ExtractSpartanTokenPostCallback(location string) (string, error) {
 	req, err := http.NewRequest("GET", location, nil)
 	if err != nil {
-		return "", fmt.Errorf("%w: %s", errors.ErrInternal, err.Error())
+		return "", errors.Format(err.Error(), errors.ErrInternal)
 	}
 
-	for k, v := range GetBaseHeaders(map[string]string{
+	for k, v := range request.GetBaseHeaders(map[string]string{
 		"Accept": "*/*",
 	}) { req.Header.Set(k, v) }
 
@@ -25,7 +25,7 @@ func ExtractSpartanTokenPostCallback(location string) (string, error) {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("%w: %s", errors.ErrInternal, err.Error())
+		return "", errors.Format(err.Error(), errors.ErrInternal)
 	}
 	defer resp.Body.Close()
 
@@ -37,7 +37,7 @@ func ExtractSpartanTokenPostCallback(location string) (string, error) {
 		if cookie.Name == tokenName {
 			tokenValue, err = url.QueryUnescape(cookie.Value)
 			if err != nil {
-				return "", fmt.Errorf("%w: %s", errors.ErrSpartanTokenGrabFailure, "Please retry in a few seconds...")
+				return "", errors.Format("please retry in a few seconds", errors.ErrSpartanTokenGrabFailure)
 			}
 
 			break
@@ -45,7 +45,7 @@ func ExtractSpartanTokenPostCallback(location string) (string, error) {
 	}
 
 	if tokenValue == "" {
-		return "", fmt.Errorf("%w: %s", errors.ErrSpartanTokenGrabFailure, "Please retry in a few seconds...")
+		return "", errors.Format("please retry in a few seconds", errors.ErrSpartanTokenGrabFailure)
 	}
 
 	return tokenValue, nil

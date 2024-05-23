@@ -1,7 +1,3 @@
-# Infinite Bookmarker [WORK IN PROGRESS]
+# Infinite Bookmarker
 
 A Halo Infinite bookmarking tool.
-
-## Download
-
-## Usage
