@@ -3,7 +3,7 @@ package promptService
 const (
 	BOOKMARK = "🔖 Bookmark files"
 	BOOKMARK_FILM = "🎬 Bookmark match (film)"
-	SHOW_CREDITS = "⭐ Show credits"
+	SHOW_CREDITS = "🤝 Show credits"
 	SIGN_OUT = "🚫 Sign out"
 	EXIT = "👋 Exit"
 	OPEN_X_1 = "Made by: Zeny IC"
