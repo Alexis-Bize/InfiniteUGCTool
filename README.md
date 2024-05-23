@@ -4,7 +4,7 @@ An interactive CLI to bookmark existing Halo Infinite UGC.
 
 ![image](/.github/assets/preview.gif?v=1)
 
-Currently only matches (films) are supported.
+⚠️ Currently only matches (films) are supported.
 
 ## Installation
 
