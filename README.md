@@ -10,7 +10,7 @@ Currently only matches (films) are supported.
 
 Download and unzip one of the files from the [latest release](https://github.com/Alexis-Bize/Infinite-Bookmarker/releases/latest) for your current OS.
 
-## Build
+## Building from source
 
 ```shell
 go build -o Infinite-Bookmarker
