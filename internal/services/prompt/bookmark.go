@@ -1,6 +1,7 @@
 package promptService
 
 import (
+	"fmt"
 	identityService "infinite-bookmarker/internal/services/identity"
 	"infinite-bookmarker/internal/shared/errors"
 	halowaypointRequest "infinite-bookmarker/internal/shared/libs/halowaypoint/modules/request"
@@ -49,9 +50,32 @@ func DisplayBookmarkOptions() error {
 			return err
 		}
 
+		stats, err := halowaypointRequest.GetMatchStats(currentIdentity.SpartanToken.Value, matchID)
+		if err != nil {
+			return err
+		}
+
+		film, err := halowaypointRequest.GetMatchFilm(currentIdentity.SpartanToken.Value, matchID)
+		if err != nil {
+			return err
+		}
+
+		os.Stdout.WriteString(strings.Join([]string{
+			fmt.Sprintf("Match Details (ID: %s)", stats.MatchID),
+			"│ Map",
+			fmt.Sprintf("├── Asset ID: %s", stats.MatchInfo.MapVariant.AssetID),
+			fmt.Sprintf("└── Version ID: %s", stats.MatchInfo.MapVariant.VersionID),
+			"│ UgcGameVariant",
+			fmt.Sprintf("├── Asset ID: %s", stats.MatchInfo.UgcGameVariant.AssetID),
+			fmt.Sprintf("└── Version ID: %s", stats.MatchInfo.UgcGameVariant.VersionID),
+			"│ Film",
+			fmt.Sprintf("└── Asset ID: %s", film.AssetID),
+			"",
+		}, "\n"))
+
 		spinner.New().Title("Bookmarking...").Run()
 
-		err = halowaypointRequest.BookmarkFilmFromMatchID(currentIdentity.XboxNetwork.Xuid, currentIdentity.SpartanToken.Value, matchID)
+		err = halowaypointRequest.BookmarkFilm(currentIdentity.XboxNetwork.Xuid, currentIdentity.SpartanToken.Value, film.AssetID)
 		if err != nil {
 			return err
 		}

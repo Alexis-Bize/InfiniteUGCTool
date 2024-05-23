@@ -51,7 +51,7 @@ func requestIdentity(isRetry bool) (string, string, error) {
 	if !isRetry {
 		os.Stdout.WriteString("👋 Hey there! Please authenticate using your Microsoft credentials to continue.\n")
 	}
-	
+
 	err = huh.NewInput().
 		Title("What's your email?").
 		Value(&email).

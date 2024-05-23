@@ -28,8 +28,9 @@ func GetUserProfile(spartanToken string) (halowaypoint.UserProfileResponse, erro
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
-		return halowaypoint.UserProfileResponse{}, errors.Format("current STv4 is invalid or has expired", errors.ErrSpartanTokenInvalid)
+	err = OnResponse(resp)
+	if err != nil {
+		return halowaypoint.UserProfileResponse{}, err
 	}
 
 	body, err := io.ReadAll(resp.Body)
