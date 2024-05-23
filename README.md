@@ -11,7 +11,8 @@ Download and unzip one of the files from the [latest release](https://github.com
 ## Building From Source
 
 ```shell
-go build -o Infinite-Bookmarker
+$ chmod +x ./build.sh
+$ ./build.sh
 ```
 
 ## Known Issues
