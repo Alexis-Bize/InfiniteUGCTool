@@ -8,6 +8,7 @@ import (
 	"infinite-bookmarker/internal/shared/modules/helpers/identity"
 	"net/mail"
 	"os"
+	"strings"
 
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/huh/spinner"
@@ -31,7 +32,7 @@ func StartAuthFlow(isRetry bool) error {
 	}
 
 	spinner.New().Title("Authenticating...").Run()
-	
+
 	profile, spartanToken, err := authService.AuthenticateWithCredentials(email, password)
 	if err != nil {
 		return err
@@ -83,5 +84,5 @@ func requestIdentity(isRetry bool) (string, string, error) {
 		return "", "", errors.Format(err.Error(), errors.ErrPrompt)
 	}
 
-	return email, password, nil
+	return strings.TrimSpace(email), strings.TrimSpace(password), nil
 }

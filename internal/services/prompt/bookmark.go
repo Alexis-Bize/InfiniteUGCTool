@@ -6,6 +6,7 @@ import (
 	halowaypointRequest "infinite-bookmarker/internal/shared/libs/halowaypoint/modules/request"
 	"os"
 	"regexp"
+	"strings"
 
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/huh/spinner"
@@ -36,7 +37,7 @@ func DisplayBookmarkOptions() error {
 		matchID, err := DisplayBookmarkFilmPrompt()
 		if err != nil {
 			if errors.MayBe(err, errors.ErrMatchIdInvalid) {
-				os.Stdout.WriteString("❌ Seems like your match ID or URL were incorrect...\n")
+				os.Stdout.WriteString("❌ Seems like your match ID or URL is incorrect...\n")
 				return DisplayBookmarkOptions()
 			}
 
@@ -73,7 +74,7 @@ func DisplayBookmarkFilmPrompt() (string, error) {
 		return "", errors.Format(err.Error(), errors.ErrPrompt)
 	}
 
-	matchID, err := extractMatchID(value)
+	matchID, err := extractMatchID(strings.TrimSpace(value))
 	if err != nil {
 		return "", err
 	}
