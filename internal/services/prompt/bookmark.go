@@ -24,24 +24,13 @@ func DisplayBookmarkOptions() error {
 
 	if err != nil {
 		return errors.Format(err.Error(), errors.ErrPrompt)
-	}
-
-	if err != nil {
-		return errors.Format(err.Error(), errors.ErrPrompt)
-	}
-
-	if option == GO_BACK {
+	} else if option == GO_BACK {
 		return DisplayBaseOptions()
 	}
 
 	if option == BOOKMARK_FILM {
 		matchID, err := DisplayBookmarkFilmPrompt()
 		if err != nil {
-			if errors.MayBe(err, errors.ErrMatchIdInvalid) {
-				os.Stdout.WriteString("❌ Seems like your match ID or URL is incorrect...\n")
-				return DisplayBookmarkOptions()
-			}
-
 			return err
 		}
 
@@ -49,6 +38,8 @@ func DisplayBookmarkOptions() error {
 		if err != nil {
 			return err
 		}
+
+		spinner.New().Title("Fetching...").Run()
 
 		stats, err := halowaypointRequest.GetMatchStats(currentIdentity.SpartanToken.Value, matchID)
 		if err != nil {
