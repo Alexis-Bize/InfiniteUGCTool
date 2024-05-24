@@ -74,3 +74,9 @@ type MatchStatsResponse struct {
 		GameplayInteraction				int `json:"GameplayInteraction"`
 	} `json:"MatchInfo"`
 }
+
+// Partial
+type NewSessionResponse struct {
+	SessionID	string `json:"SessionId"`
+	AssetID		string `json:"AssetId"`
+}

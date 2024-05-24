@@ -41,7 +41,6 @@ func GetMatchStats(spartanToken string, matchID string) (halowaypoint.MatchStats
 	}
 
 	var stats halowaypoint.MatchStatsResponse
-
 	if err := json.Unmarshal(body, &stats); err != nil {
 		return halowaypoint.MatchStatsResponse{}, errors.Format(err.Error(), errors.ErrInternal)
 	}

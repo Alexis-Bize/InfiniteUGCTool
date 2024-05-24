@@ -48,3 +48,25 @@ func GetMatchFilm(spartanToken string, matchID string) (halowaypoint.MatchSpecta
 
 	return film, nil
 }
+
+func PingPublishedAsset(spartanToken string, category string, assetID string) error {
+	url := request.ComputeUrl(halowaypoint.GetConfig().Urls.Discovery, fmt.Sprintf("/hi/%s/%s", category, assetID))
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return errors.Format(err.Error(), errors.ErrInternal)
+	}
+
+	for k, v := range request.GetBaseHeaders(map[string]string{
+		"Accept": "application/json",
+		"X-343-Authorization-Spartan": spartanToken,
+	}) { req.Header.Set(k, v) }
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return errors.Format(err.Error(), errors.ErrInternal)
+	}
+	defer resp.Body.Close()
+
+	return OnResponse(resp)
+}
