@@ -33,7 +33,7 @@ func DisplayBaseOptions() error {
 		huh.NewConfirm().
 			Title("Are you sure?").
 			Affirmative("Yes!").
-			Negative("No.").
+			Negative("Oops, nevermind.").
 			Value(&confirm).
 			Run()
 

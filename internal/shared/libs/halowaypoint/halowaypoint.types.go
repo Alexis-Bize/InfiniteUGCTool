@@ -74,3 +74,8 @@ type MatchStatsResponse struct {
 		GameplayInteraction				int `json:"GameplayInteraction"`
 	} `json:"MatchInfo"`
 }
+
+type NewSessionResponse struct {
+	SessionID	string `json:"SessionId"`
+	AssetID		string `json:"AssetId"`
+}

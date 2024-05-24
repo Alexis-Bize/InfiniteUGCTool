@@ -61,35 +61,30 @@ func DisplayBookmarkOptions() error {
 
 		os.Stdout.WriteString(strings.Join([]string{
 			fmt.Sprintf("Match Details (ID: %s)", stats.MatchID),
-			"│ MapVariant",
-			fmt.Sprintf("├── Asset ID: %s", stats.MatchInfo.MapVariant.AssetID),
-			fmt.Sprintf("└── Version ID: %s", stats.MatchInfo.MapVariant.VersionID),
-			"│ UgcGameVariant",
-			fmt.Sprintf("├── Asset ID: %s", stats.MatchInfo.UgcGameVariant.AssetID),
-			fmt.Sprintf("└── Version ID: %s", stats.MatchInfo.UgcGameVariant.VersionID),
 			"│ Film",
 			fmt.Sprintf("└── Asset ID: %s", film.AssetID),
 			"",
 		}, "\n"))
 
-		return bookmarkFilm(
+		return bookmarkAsset(
 			currentIdentity.XboxNetwork.Xuid,
 			currentIdentity.SpartanToken.Value,
+			"films",
 			film.AssetID,
 			"",
 		)
 	}
 
 	if option == BOOKMARK_MAP || option == BOOKMARK_MODE {
-		var confirm bool
+		var askForAssets bool
 		huh.NewConfirm().
 			Title("Would you like to bookmark the asset from an existing match?").
-			Affirmative("Yes please!").
-			Negative("No, I know what I'm doing.").
-			Value(&confirm).
+			Affirmative("No, I know what I'm doing.").
+			Negative("Yes please!").
+			Value(&askForAssets).
 			Run()
 
-		if !confirm {
+		if askForAssets {
 			assetID, assetVersionID, err := DisplayBookmarkVariantPrompt()
 			if err != nil {
 				if !errors.MayBe(err, errors.ErrPrompt) {
@@ -100,16 +95,18 @@ func DisplayBookmarkOptions() error {
 			}
 
 			if option == BOOKMARK_MAP {
-				return bookmarkMapVariant(
+				return bookmarkAsset(
 					currentIdentity.XboxNetwork.Xuid,
 					currentIdentity.SpartanToken.Value,
+					"maps",
 					assetID,
 					assetVersionID,
 				)
 			} else if option == BOOKMARK_MODE {
-				return bookmarkUgcGameVariant(
+				return bookmarkAsset(
 					currentIdentity.XboxNetwork.Xuid,
 					currentIdentity.SpartanToken.Value,
+					"ugcgamevariants",
 					assetID,
 					assetVersionID,
 				)
@@ -144,9 +141,10 @@ func DisplayBookmarkOptions() error {
 				"",
 			}, "\n"))
 
-			return bookmarkMapVariant(
+			return bookmarkAsset(
 				currentIdentity.XboxNetwork.Xuid,
 				currentIdentity.SpartanToken.Value,
+				"maps",
 				stats.MatchInfo.MapVariant.AssetID,
 				stats.MatchInfo.MapVariant.VersionID,
 			)
@@ -159,9 +157,10 @@ func DisplayBookmarkOptions() error {
 				"",
 			}, "\n"))
 
-			return bookmarkUgcGameVariant(
+			return bookmarkAsset(
 				currentIdentity.XboxNetwork.Xuid,
 				currentIdentity.SpartanToken.Value,
+				"ugcgamevariants",
 				stats.MatchInfo.UgcGameVariant.AssetID,
 				stats.MatchInfo.UgcGameVariant.VersionID,
 			)
@@ -238,6 +237,30 @@ func DisplayBookmarkVariantPrompt() (string, string, error) {
 	return assetID, assetVersionID, nil
 }
 
+func displayAssetCloneFallbackOptions(xuid string, spartanToken string, category string, assetID string, assetVersionID string) error {
+	var ignoreCloning bool
+	huh.NewConfirm().
+		Title("The desired asset is not published; would you like to try cloning it in your files instead?").
+		Affirmative("No, that's ok.").
+		Negative("Yes please!").
+		Value(&ignoreCloning).
+		Run()
+
+	if ignoreCloning {
+		return DisplayBookmarkOptions()
+	}
+
+	spinner.New().Title("Cloning...").Run()
+	err := halowaypointRequest.CloneAsset(xuid, spartanToken, category, assetID, assetVersionID)
+	if err != nil {
+		os.Stdout.WriteString("❌ Failed to clone the desired file...\n")
+		return DisplayBookmarkOptions()
+	}
+
+	os.Stdout.WriteString("🎉 Cloned with success!\n")
+	return DisplayBaseOptions()
+}
+
 func extractUUID(value string) (string, error) {
 	const pattern = `[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`
 	re := regexp.MustCompile(pattern)
@@ -250,38 +273,30 @@ func extractUUID(value string) (string, error) {
 	return "", errors.Format("invalid format", errors.ErrUUIDInvalid)
 }
 
-func bookmarkFilm(xuid string, spartanToken string, assetID string, assetVersionID string) error {
-	spinner.New().Title("Bookmarking your film...").Run()
+func bookmarkAsset(xuid string, spartanToken string, category string, assetID string, assetVersionID string) error {
+	var err error
+	spinner.New().Title("Bookmarking...").Run()
 
-	err := halowaypointRequest.Bookmark(xuid, spartanToken, "films", assetID, assetVersionID)
-	if err != nil {
-		os.Stdout.WriteString("❌ Failed to bookmark the desired content...\n")
-		return DisplayBookmarkOptions()
+	if category != "films" {
+		err = halowaypointRequest.PingPublishedAsset(spartanToken, category, assetID)
+		if err != nil {
+			if errors.MayBe(err, errors.ErrNotFound) {
+				if assetVersionID != "" {
+					return displayAssetCloneFallbackOptions(xuid, spartanToken, category, assetID, assetVersionID)
+				}
+		
+				os.Stdout.WriteString("❌ Failed to bookmark the desired file...\n")
+				return DisplayBookmarkOptions()
+			}
+		
+			os.Stdout.WriteString("❌ Something went wrong...\n")
+			return DisplayBookmarkOptions()
+		}
 	}
 
-	os.Stdout.WriteString("🎉 Bookmarked with success!\n")
-	return DisplayBaseOptions()
-}
-
-func bookmarkMapVariant(xuid string, spartanToken string, assetID string, assetVersionID string) error {
-	spinner.New().Title("Bookmarking your map...").Run()
-
-	err := halowaypointRequest.Bookmark(xuid, spartanToken, "maps", assetID, assetVersionID)
+	err = halowaypointRequest.Bookmark(xuid, spartanToken, category, assetID, assetVersionID)
 	if err != nil {
-		os.Stdout.WriteString("❌ Failed to bookmark the desired content...\n")
-		return DisplayBookmarkOptions()
-	}
-
-	os.Stdout.WriteString("🎉 Bookmarked with success!\n")
-	return DisplayBaseOptions()
-}
-
-func bookmarkUgcGameVariant(xuid string, spartanToken string, assetID string, assetVersionID string) error {
-	spinner.New().Title("Bookmarking your mode...").Run()
-
-	err := halowaypointRequest.Bookmark(xuid, spartanToken, "ugcgamevariants", assetID, assetVersionID)
-	if err != nil {
-		os.Stdout.WriteString("❌ Failed to bookmark the desired content...\n")
+		os.Stdout.WriteString("❌ Something went wrong...\n")
 		return DisplayBookmarkOptions()
 	}
 

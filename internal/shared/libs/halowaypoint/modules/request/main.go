@@ -14,7 +14,7 @@ func OnResponse(resp *http.Response) error {
 		err = errors.Format("your are not allowed to perform this action", errors.ErrForbidden)
 	} else if resp.StatusCode == 404 {
 		err = errors.Format("desired entity does not exist", errors.ErrNotFound)
-	} else if resp.StatusCode != 200 {
+	} else if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		err = errors.Format("something went wrong", errors.ErrInternal)
 	}
 
