@@ -75,7 +75,6 @@ type MatchStatsResponse struct {
 	} `json:"MatchInfo"`
 }
 
-// Partial
 type NewSessionResponse struct {
 	SessionID	string `json:"SessionId"`
 	AssetID		string `json:"AssetId"`

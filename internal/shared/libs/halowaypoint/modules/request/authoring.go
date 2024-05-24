@@ -76,15 +76,15 @@ func BookmarkFilmFromMatchID(xuid string, spartanToken string, matchID string) e
 }
 
 func CloneAsset(xuid string, spartanToken string, category string, assetID string, assetVersionID string) error {
-	sessionID, err := createSession(xuid, spartanToken, category, assetID, assetVersionID)
+	newAssetID, sessionID, err := createSession(xuid, spartanToken, category, assetID, assetVersionID)
 	if err != nil {
 		return err
 	}
 
-	return saveSession(xuid, spartanToken, category, assetID, sessionID)
+	return saveSession(xuid, spartanToken, category, newAssetID, sessionID)
 }
 
-func createSession(xuid string, spartanToken string, category string, assetID string, assetVersionID string) (string, error) {
+func createSession(xuid string, spartanToken string, category string, assetID string, assetVersionID string) (string, string, error) {
 	url := request.ComputeUrl(halowaypoint.GetConfig().Urls.Authoring, fmt.Sprintf("/hi/%s/new/sessions", category))
 	payload := map[string]interface{}{
 		"AssetToCopy": map[string]interface{}{
@@ -96,12 +96,12 @@ func createSession(xuid string, spartanToken string, category string, assetID st
 
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
-		return "", errors.Format(err.Error(), errors.ErrInternal)
+		return "", "", errors.Format(err.Error(), errors.ErrInternal)
 	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
 	if err != nil {
-		return "", errors.Format(err.Error(), errors.ErrInternal)
+		return "", "", errors.Format(err.Error(), errors.ErrInternal)
 	}
 
 	for k, v := range request.GetBaseHeaders(map[string]string{
@@ -113,26 +113,26 @@ func createSession(xuid string, spartanToken string, category string, assetID st
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", errors.Format(err.Error(), errors.ErrInternal)
+		return "", "", errors.Format(err.Error(), errors.ErrInternal)
 	}
 	defer resp.Body.Close()
 
 	err = OnResponse(resp)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", errors.Format(err.Error(), errors.ErrInternal)
+		return "", "", errors.Format(err.Error(), errors.ErrInternal)
 	}
 
 	var session halowaypoint.NewSessionResponse
 	if err := json.Unmarshal(body, &session); err != nil {
-		return "", errors.Format(err.Error(), errors.ErrInternal)
+		return "", "", errors.Format(err.Error(), errors.ErrInternal)
 	}
 
-	return session.SessionID, nil
+	return session.AssetID, session.SessionID, nil
 }
 
 func saveSession(xuid string, spartanToken string, category string, assetID string, sessionID string) error {

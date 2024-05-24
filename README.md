@@ -1,6 +1,6 @@
 # Infinite Bookmarker
 
-An interactive CLI to bookmark existing Halo Infinite UGC.
+An interactive CLI to bookmark and clone existing Halo Infinite UGC.
 
 ![image](/.github/assets/preview.gif?v=1)
 
