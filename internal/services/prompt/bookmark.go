@@ -61,12 +61,6 @@ func DisplayBookmarkOptions() error {
 
 		os.Stdout.WriteString(strings.Join([]string{
 			fmt.Sprintf("Match Details (ID: %s)", stats.MatchID),
-			"│ MapVariant",
-			fmt.Sprintf("├── Asset ID: %s", stats.MatchInfo.MapVariant.AssetID),
-			fmt.Sprintf("└── Version ID: %s", stats.MatchInfo.MapVariant.VersionID),
-			"│ UgcGameVariant",
-			fmt.Sprintf("├── Asset ID: %s", stats.MatchInfo.UgcGameVariant.AssetID),
-			fmt.Sprintf("└── Version ID: %s", stats.MatchInfo.UgcGameVariant.VersionID),
 			"│ Film",
 			fmt.Sprintf("└── Asset ID: %s", film.AssetID),
 			"",
