@@ -46,6 +46,15 @@ func Authenticate(credentials msa.LiveCredentials, options msa.LiveClientAuthOpt
 	defer resp.Body.Close()
 
 	if resp.StatusCode == 200 {
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, errors.Format(err.Error(), errors.ErrInternal)
+		}
+		
+		if strings.Contains(string(body), "PROOF.Type") {
+			return nil, errors.Format("waiting for validation", errors.ErrAuth2FARequired)
+		}
+
 		return nil, errors.Format("the authentication has failed", errors.ErrAuthFailure)
 	}
 

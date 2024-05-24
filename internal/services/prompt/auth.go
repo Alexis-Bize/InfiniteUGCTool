@@ -15,11 +15,7 @@ import (
 )
 
 func StartAuthFlow(isRetry bool) error {
-	currentIdentity, err := identity.GetOrCreateIdentity(identity.Identity{})
-	if err != nil {
-		return err
-	}
-
+	currentIdentity, _ := identity.GetOrCreateIdentity(identity.Identity{})
 	if currentIdentity != (identity.Identity{}) {
 		os.Stdout.WriteString(fmt.Sprintf("👋 Welcome back, %s!\n", currentIdentity.XboxNetwork.Gamertag))
 		_, err := identityService.RefreshIdentityIfRequired(currentIdentity)
@@ -50,6 +46,7 @@ func requestIdentity(isRetry bool) (string, string, error) {
 
 	if !isRetry {
 		os.Stdout.WriteString("👋 Hey there! Please authenticate using your Microsoft credentials to continue.\n")
+		os.Stdout.WriteString("💬 You must have authenticated on HaloWaypoint.com at least once before!\n")
 	}
 
 	err = huh.NewInput().

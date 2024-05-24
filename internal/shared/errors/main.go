@@ -12,6 +12,7 @@ var (
 	ErrNotFound = errors.New("not found")
 	ErrForbidden = errors.New("forbidden")
 	ErrAuthFailure = errors.New("account auth failure")
+	ErrAuth2FARequired= errors.New("two factor authentication required")
 	ErrPreAuthFailure = errors.New("pre authentication failure")
 	ErrSpartanTokenGrabFailure = errors.New("spartan token grab failure")
 	ErrSpartanTokenInvalid = errors.New("invalid spartan token")

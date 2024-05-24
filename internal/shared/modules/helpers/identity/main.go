@@ -75,6 +75,7 @@ func loadIdentity() (Identity, error) {
 		return identity, errors.Format(err.Error(), errors.ErrIdentityReadFailure)
 	}
 
+
 	decrypt, err := crypto.Decrypt(data, nil)
 	if err != nil {
 		return identity, err
