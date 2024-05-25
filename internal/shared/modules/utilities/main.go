@@ -2,7 +2,7 @@ package utilities
 
 import (
 	"fmt"
-	"infinite-bookmarker/internal/shared/errors"
+	"infinite-bookmarker/internal/shared/modules/errors"
 	"os/exec"
 	"runtime"
 )

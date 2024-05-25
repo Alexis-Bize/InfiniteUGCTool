@@ -4,7 +4,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"infinite-bookmarker/internal/shared/errors"
+	"infinite-bookmarker/internal/shared/modules/errors"
 	"io"
 	"os"
 	"runtime"

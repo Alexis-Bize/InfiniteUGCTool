@@ -3,8 +3,8 @@ package halowaypointRequest
 import (
 	"encoding/json"
 	"fmt"
-	"infinite-bookmarker/internal/shared/errors"
 	"infinite-bookmarker/internal/shared/libs/halowaypoint"
+	"infinite-bookmarker/internal/shared/modules/errors"
 	"infinite-bookmarker/internal/shared/modules/utilities/request"
 	"io"
 	"net/http"
@@ -41,7 +41,6 @@ func GetMatchFilm(spartanToken string, matchID string) (halowaypoint.MatchSpecta
 	}
 
 	var film halowaypoint.MatchSpectateResponse
-
 	if err := json.Unmarshal(body, &film); err != nil {
 		return halowaypoint.MatchSpectateResponse{}, errors.Format(err.Error(), errors.ErrInternal)
 	}

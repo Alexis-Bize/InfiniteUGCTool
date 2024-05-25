@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"infinite-bookmarker/internal"
 	promptService "infinite-bookmarker/internal/services/prompt"
-	"infinite-bookmarker/internal/shared/errors"
+	"infinite-bookmarker/internal/shared/modules/errors"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	godotenv.Load()
 	os.Stdout.WriteString(fmt.Sprintf("# %s (%s)\n", internal.GetConfig().Title, internal.GetConfig().Version))
 
 	err := exec(false)

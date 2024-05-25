@@ -1,7 +1,7 @@
 package halowaypointRequest
 
 import (
-	"infinite-bookmarker/internal/shared/errors"
+	"infinite-bookmarker/internal/shared/modules/errors"
 	"infinite-bookmarker/internal/shared/modules/utilities/request"
 	"net/http"
 	"net/url"

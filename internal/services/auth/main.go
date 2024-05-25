@@ -1,11 +1,11 @@
 package authService
 
 import (
-	"infinite-bookmarker/internal/shared/errors"
 	"infinite-bookmarker/internal/shared/libs/halowaypoint"
 	halowaypointRequest "infinite-bookmarker/internal/shared/libs/halowaypoint/modules/request"
 	"infinite-bookmarker/internal/shared/libs/msa"
 	msaRequest "infinite-bookmarker/internal/shared/libs/msa/modules/request"
+	"infinite-bookmarker/internal/shared/modules/errors"
 )
 
 func AuthenticateWithCredentials(email string, password string) (halowaypoint.UserProfileResponse, string, error) {

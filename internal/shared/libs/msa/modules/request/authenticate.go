@@ -1,14 +1,20 @@
 package msaRequest
 
 import (
-	"infinite-bookmarker/internal/shared/errors"
+	"fmt"
 	"infinite-bookmarker/internal/shared/libs/msa"
+	"infinite-bookmarker/internal/shared/modules/errors"
 	"infinite-bookmarker/internal/shared/modules/utilities/request"
 	"io"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
+
+	"github.com/charmbracelet/huh"
+	"github.com/charmbracelet/huh/spinner"
+	"github.com/robertkrimen/otto"
+	"github.com/tidwall/gjson"
 )
 
 func Authenticate(credentials msa.LiveCredentials, options msa.LiveClientAuthOptions) (*http.Response, error) {
@@ -45,20 +51,86 @@ func Authenticate(credentials msa.LiveCredentials, options msa.LiveClientAuthOpt
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == 200 {
+	if resp.StatusCode != 200 {
+		return resp, nil
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return resp, errors.Format(err.Error(), errors.ErrInternal)
+	} else if !strings.Contains(string(body), "PROOF.Type") {
+		return resp, errors.Format("the authentication has failed", errors.ErrAuthFailure)
+	}
+
+	serverData, err := extractJSObjectAndConvertToJSON(body, "ServerData")
+	if err != nil {
+		return nil, err
+	}
+
+	return requestOneTimeCode(credentials.Email, serverData, strings.Join(resp.Header["Set-Cookie"], "; "))
+}
+
+func requestOneTimeCode(email string, serverData gjson.Result, cookie string) (*http.Response, error) {
+	sFT := serverData.Get("sFT").Str
+	urlPost := serverData.Get("urlPost").Str
+	proof := serverData.Get("p|@reverse|0|data").Str
+
+	if sFT == "" || urlPost == "" || proof == "" {
 		return nil, errors.Format("the authentication has failed", errors.ErrAuthFailure)
 	}
 
-	return resp, nil
-}
+	var otc string
+	err := huh.NewInput().
+		Title("📱 Two Factor Authentication: Please enter the code displayed in your authenticator application to continue").
+		Value(&otc).
+		Validate(func (input string) error {
+			if len(input) == 0 {
+				return errors.New("code can not be empty")
+			}
 
-func getMatchForIndex(body string, pattern *regexp.Regexp, index int) string {
-	matches := pattern.FindStringSubmatch(body)
-	if len(matches) > index {
-		return matches[index]
+			return nil
+		}).Run()
+
+	if err != nil {
+		return nil, errors.Format(err.Error(), errors.ErrPrompt)
 	}
 
-	return ""
+	spinner.New().Title("Validating...").Run()
+
+	form := url.Values{}
+	form.Add("type", "19")
+	form.Add("SentProofIDE", proof)
+	form.Add("otc", strings.TrimSpace(otc))
+	form.Add("login",email)
+	form.Add("PPFT", sFT)
+
+	req, err := http.NewRequest("POST", urlPost, strings.NewReader(form.Encode()))
+	if err != nil {
+		return nil, errors.Format(err.Error(), errors.ErrInternal)
+	}
+
+	for k, v := range request.GetBaseHeaders(map[string]string{
+		"Cookie": cookie,
+		"Content-Type": "application/x-www-form-urlencoded",
+	}) { req.Header.Set(k, v) }
+
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, errors.Format(err.Error(), errors.ErrInternal)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 200 {
+		return resp, errors.Format("the authentication has failed", errors.ErrAuthFailure)
+	}
+
+	return resp, nil
 }
 
 func preAuth(options *msa.LiveClientAuthOptions) (*msa.LivePreAuthResponse, error) {
@@ -96,8 +168,8 @@ func preAuth(options *msa.LiveClientAuthOptions) (*msa.LivePreAuthResponse, erro
 	ppftPattern := regexp.MustCompile(`sFTTag:'.*value="(.*)"\/>'`)
 
 	matches := msa.LivePreAuthMatchedParameters{
-		URLPost: getMatchForIndex(string(body), urlPostPattern, 1),
-		PPFT: getMatchForIndex(string(body), ppftPattern, 1),
+		URLPost: matchForIndex(string(body), urlPostPattern, 1),
+		PPFT: matchForIndex(string(body), ppftPattern, 1),
 	}
 
 	if matches.PPFT == "" || matches.URLPost == "" {
@@ -108,4 +180,44 @@ func preAuth(options *msa.LiveClientAuthOptions) (*msa.LivePreAuthResponse, erro
 		Cookie:  cookie,
 		Matches: matches,
 	}, nil
+}
+
+func matchForIndex(body string, pattern *regexp.Regexp, index int) string {
+	matches := pattern.FindStringSubmatch(body)
+	if len(matches) > index {
+		return matches[index]
+	}
+
+	return ""
+}
+
+func extractJSObjectAndConvertToJSON(body []byte, objName string) (gjson.Result, error) {
+	bodyStr := string(body)
+	serverDataRe := fmt.Sprintf(`%s(?:.*?)=(?:.*?)({(?:.*?)});`, regexp.QuoteMeta(objName))
+
+	re, err := regexp.Compile(serverDataRe)
+	if err != nil {
+		return gjson.Result{}, errors.Format(err.Error(), errors.ErrInternal)
+	}
+
+	matches := re.FindStringSubmatch(bodyStr)
+	if len(matches) == 0 {
+		return gjson.Result{}, errors.Format("no matches found", errors.ErrInternal)
+	}
+
+	JSObject := matches[1]
+	JSCode := "JSON.stringify(" + JSObject + ");"
+
+	vm := otto.New()
+	value, err := vm.Run(JSCode)
+	if err != nil {
+		return gjson.Result{}, errors.Format(err.Error(), errors.ErrInternal)
+	}
+
+	toString, err := value.ToString()
+	if err != nil {
+		return gjson.Result{}, errors.Format(err.Error(), errors.ErrInternal)
+	}
+
+	return gjson.Parse(toString), nil
 }

@@ -3,8 +3,8 @@ package promptService
 import (
 	"fmt"
 	identityService "infinite-bookmarker/internal/services/identity"
-	"infinite-bookmarker/internal/shared/errors"
 	halowaypointRequest "infinite-bookmarker/internal/shared/libs/halowaypoint/modules/request"
+	"infinite-bookmarker/internal/shared/modules/errors"
 	"os"
 	"regexp"
 	"strings"

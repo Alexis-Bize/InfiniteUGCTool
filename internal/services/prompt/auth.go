@@ -4,7 +4,7 @@ import (
 	"fmt"
 	authService "infinite-bookmarker/internal/services/auth"
 	identityService "infinite-bookmarker/internal/services/identity"
-	"infinite-bookmarker/internal/shared/errors"
+	"infinite-bookmarker/internal/shared/modules/errors"
 	"infinite-bookmarker/internal/shared/modules/helpers/identity"
 	"net/mail"
 	"os"
@@ -15,24 +15,28 @@ import (
 )
 
 func StartAuthFlow(isRetry bool) error {
-	currentIdentity, err := identity.GetOrCreateIdentity(identity.Identity{})
-	if err != nil {
-		return err
-	}
+	var err error
+	var email string
+	var password string
 
+	currentIdentity, _ := identity.GetOrCreateIdentity(identity.Identity{})
 	if currentIdentity != (identity.Identity{}) {
 		os.Stdout.WriteString(fmt.Sprintf("👋 Welcome back, %s!\n", currentIdentity.XboxNetwork.Gamertag))
 		_, err := identityService.RefreshIdentityIfRequired(currentIdentity)
 		return err
 	}
 
-	email, password, err := requestIdentity(isRetry)
-	if err != nil {
-		return err
+	email = os.Getenv("ACCOUNT_EMAIL")
+	password = os.Getenv("ACCOUNT_PASSWORD")
+
+	if email == "" || password == "" {
+		email, password, err = requestIdentity(isRetry)
+		if err != nil {
+			return err
+		}
 	}
 
 	spinner.New().Title("Authenticating...").Run()
-
 	profile, spartanToken, err := authService.AuthenticateWithCredentials(email, password)
 	if err != nil {
 		return err
@@ -49,7 +53,8 @@ func requestIdentity(isRetry bool) (string, string, error) {
 	var password string
 
 	if !isRetry {
-		os.Stdout.WriteString("👋 Hey there! Please authenticate using your Microsoft credentials to continue.\n")
+		os.Stdout.WriteString("| Hey there! Please authenticate using your Microsoft credentials to continue\n")
+		os.Stdout.WriteString("└── You must have authenticated on HaloWaypoint.com at least once before!\n")
 	}
 
 	err = huh.NewInput().
