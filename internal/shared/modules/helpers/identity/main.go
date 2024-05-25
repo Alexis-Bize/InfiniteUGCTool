@@ -3,8 +3,8 @@ package identity
 import (
 	"encoding/json"
 	"infinite-bookmarker/internal"
-	"infinite-bookmarker/internal/shared/errors"
 	"infinite-bookmarker/internal/shared/modules/crypto"
+	"infinite-bookmarker/internal/shared/modules/errors"
 	"os"
 	"path/filepath"
 	"strings"

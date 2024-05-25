@@ -2,8 +2,8 @@ package halowaypointRequest
 
 import (
 	"encoding/json"
-	"infinite-bookmarker/internal/shared/errors"
 	"infinite-bookmarker/internal/shared/libs/halowaypoint"
+	"infinite-bookmarker/internal/shared/modules/errors"
 	"infinite-bookmarker/internal/shared/modules/utilities/request"
 	"io"
 	"net/http"

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	authService "infinite-bookmarker/internal/services/auth"
 	identityService "infinite-bookmarker/internal/services/identity"
-	"infinite-bookmarker/internal/shared/errors"
+	"infinite-bookmarker/internal/shared/modules/errors"
 	"infinite-bookmarker/internal/shared/modules/helpers/identity"
 	"net/mail"
 	"os"
@@ -15,6 +15,10 @@ import (
 )
 
 func StartAuthFlow(isRetry bool) error {
+	var err error
+	var email string
+	var password string
+
 	currentIdentity, _ := identity.GetOrCreateIdentity(identity.Identity{})
 	if currentIdentity != (identity.Identity{}) {
 		os.Stdout.WriteString(fmt.Sprintf("👋 Welcome back, %s!\n", currentIdentity.XboxNetwork.Gamertag))
@@ -22,9 +26,14 @@ func StartAuthFlow(isRetry bool) error {
 		return err
 	}
 
-	email, password, err := requestIdentity(isRetry)
-	if err != nil {
-		return err
+	email = os.Getenv("ACCOUNT_EMAIL")
+	password = os.Getenv("ACCOUNT_PASSWORD")
+
+	if email == "" || password == "" {
+		email, password, err = requestIdentity(isRetry)
+		if err != nil {
+			return err
+		}
 	}
 
 	spinner.New().Title("Authenticating...").Run()

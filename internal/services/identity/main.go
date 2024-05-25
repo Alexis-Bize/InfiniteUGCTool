@@ -2,8 +2,8 @@ package identityService
 
 import (
 	authService "infinite-bookmarker/internal/services/auth"
-	"infinite-bookmarker/internal/shared/errors"
 	"infinite-bookmarker/internal/shared/libs/halowaypoint"
+	"infinite-bookmarker/internal/shared/modules/errors"
 	"infinite-bookmarker/internal/shared/modules/helpers/identity"
 	"os"
 	"time"

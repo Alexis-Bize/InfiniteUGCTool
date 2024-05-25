@@ -1,7 +1,7 @@
 package promptService
 
 import (
-	"infinite-bookmarker/internal/shared/errors"
+	"infinite-bookmarker/internal/shared/modules/errors"
 	"infinite-bookmarker/internal/shared/modules/helpers/identity"
 	"infinite-bookmarker/internal/shared/modules/utilities"
 
