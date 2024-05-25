@@ -17,7 +17,7 @@ $ ./build.sh
 
 ## Known Issues
 
--   Accounts using 2FA are partially supported (authenticator app only)
+-   Accounts using 2FA are partially supported (only authenticator applications)
 -   **Halo Infinite** hasn't been able to load or play bookmarked films [since 2022](https://x.com/gruntdotapi/status/1544268951311491072).
 -   [Windows Terminal](https://apps.microsoft.com/detail/9n0dx20hk701) may lose focus and ignore some inputs.
 -   Default Windows terminals such as `cmd.exe` and `powershell.exe` won't render existing emojis.
