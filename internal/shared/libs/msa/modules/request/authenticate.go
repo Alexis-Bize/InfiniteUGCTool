@@ -72,7 +72,7 @@ func Authenticate(credentials msa.LiveCredentials, options msa.LiveClientAuthOpt
 	
 	var otc string
 	err = huh.NewInput().
-		Title("Enter the code displayed in the Microsoft app (such as Authenticator or Outlook) you use for approving sign-in requests").
+		Title("📱 Enter the code displayed in the Microsoft app (such as Authenticator or Outlook) you use for approving sign-in requests").
 		Value(&otc).
 		Validate(func (input string) error {
 			if len(input) == 0 {
@@ -89,7 +89,7 @@ func Authenticate(credentials msa.LiveCredentials, options msa.LiveClientAuthOpt
 	form = url.Values{}
 	form.Add("type", "19")
 	form.Add("SentProofIDE", proof.Str)
-	form.Add("otc", otc)
+	form.Add("otc", strings.TrimSpace(otc))
 	form.Add("AddTD", "true")
 	form.Add("login", credentials.Email)
 	form.Add("PPFT", sFT.Str)
