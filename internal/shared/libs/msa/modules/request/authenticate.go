@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/huh"
+	"github.com/charmbracelet/huh/spinner"
 	"github.com/robertkrimen/otto"
 	"github.com/tidwall/gjson"
 )
@@ -66,13 +67,21 @@ func Authenticate(credentials msa.LiveCredentials, options msa.LiveClientAuthOpt
 		return nil, err
 	}
 
-	sFT := serverData.Get("sFT")
-	urlPost := serverData.Get("urlPost")
-	proof := serverData.Get("p|@reverse|0|data")
-	
+	return requestOneTimeCode(credentials.Email, serverData, strings.Join(resp.Header["Set-Cookie"], "; "))
+}
+
+func requestOneTimeCode(email string, serverData gjson.Result, cookie string) (*http.Response, error) {
+	sFT := serverData.Get("sFT").Str
+	urlPost := serverData.Get("urlPost").Str
+	proof := serverData.Get("p|@reverse|0|data").Str
+
+	if sFT == "" || urlPost == "" || proof == "" {
+		return nil, errors.Format("the authentication has failed", errors.ErrAuthFailure)
+	}
+
 	var otc string
-	err = huh.NewInput().
-		Title("📱 Enter the code displayed in the Microsoft app (such as Authenticator or Outlook) you use for approving sign-in requests").
+	err := huh.NewInput().
+		Title("📱 Two Factor Authentication: Please enter the code displayed in your authenticator application to continue").
 		Value(&otc).
 		Validate(func (input string) error {
 			if len(input) == 0 {
@@ -86,31 +95,32 @@ func Authenticate(credentials msa.LiveCredentials, options msa.LiveClientAuthOpt
 		return nil, errors.Format(err.Error(), errors.ErrPrompt)
 	}
 
-	form = url.Values{}
-	form.Add("type", "19")
-	form.Add("SentProofIDE", proof.Str)
-	form.Add("otc", strings.TrimSpace(otc))
-	form.Add("AddTD", "true")
-	form.Add("login", credentials.Email)
-	form.Add("PPFT", sFT.Str)
+	spinner.New().Title("Validating...").Run()
 
-	req, err = http.NewRequest("POST", urlPost.Str, strings.NewReader(form.Encode()))
+	form := url.Values{}
+	form.Add("type", "19")
+	form.Add("SentProofIDE", proof)
+	form.Add("otc", strings.TrimSpace(otc))
+	form.Add("login",email)
+	form.Add("PPFT", sFT)
+
+	req, err := http.NewRequest("POST", urlPost, strings.NewReader(form.Encode()))
 	if err != nil {
 		return nil, errors.Format(err.Error(), errors.ErrInternal)
 	}
 
 	for k, v := range request.GetBaseHeaders(map[string]string{
-		"Cookie": strings.Join(resp.Header["Set-Cookie"], "; "),
+		"Cookie": cookie,
 		"Content-Type": "application/x-www-form-urlencoded",
 	}) { req.Header.Set(k, v) }
 
-	client = &http.Client{
+	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
 	}
 
-	resp, err = client.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, errors.Format(err.Error(), errors.ErrInternal)
 	}

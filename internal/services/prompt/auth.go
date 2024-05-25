@@ -37,7 +37,6 @@ func StartAuthFlow(isRetry bool) error {
 	}
 
 	spinner.New().Title("Authenticating...").Run()
-
 	profile, spartanToken, err := authService.AuthenticateWithCredentials(email, password)
 	if err != nil {
 		return err
@@ -54,8 +53,8 @@ func requestIdentity(isRetry bool) (string, string, error) {
 	var password string
 
 	if !isRetry {
-		os.Stdout.WriteString("👋 Hey there! Please authenticate using your Microsoft credentials to continue.\n")
-		os.Stdout.WriteString("💬 You must have authenticated on HaloWaypoint.com at least once before!\n")
+		os.Stdout.WriteString("| Hey there! Please authenticate using your Microsoft credentials to continue\n")
+		os.Stdout.WriteString("└── You must have authenticated on HaloWaypoint.com at least once before!\n")
 	}
 
 	err = huh.NewInput().
