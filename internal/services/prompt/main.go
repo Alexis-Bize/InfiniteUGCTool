@@ -1,7 +1,9 @@
-package promptService
+package prompt_svc
 
 const (
-	BOOKMARK = "🔖 Bookmark files"
+	BOOKMARK_FILES = "🔖 Bookmark files"
+	CLONE_FILES = "🔄 Clone files"
+	BUNDLE_FILES = "📦 Create a bundle"
 	SHOW_CREDITS = "🤝 Show credits"
 	SIGN_OUT = "🚫 Sign out"
 	EXIT = "👋 Exit"
@@ -9,9 +11,10 @@ const (
 )
 
 const (
-	BOOKMARK_FILM = "🎬 Match (Film)"
-	BOOKMARK_MODE = "🎮 Mode (UgcGameVariant)"
-	BOOKMARK_MAP = "🌎 Map (MapVariant)"
+	BUNDLE = "📦 Bundle (MapModePair)"
+	FILM = "🎬 Match (Film)"
+	MODE = "🎮 Mode (UgcGameVariant)"
+	MAP = "🌎 Map (MapVariant)"
 )
 
 const (

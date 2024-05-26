@@ -2,7 +2,8 @@ package request
 
 import (
 	"fmt"
-	"infinite-bookmarker/internal"
+
+	"infinite-ugc-haven/internal"
 )
 
 var RequestUserAgent = fmt.Sprintf(

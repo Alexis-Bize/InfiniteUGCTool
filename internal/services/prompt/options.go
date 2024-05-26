@@ -1,9 +1,9 @@
-package promptService
+package prompt_svc
 
 import (
-	"infinite-bookmarker/internal/shared/modules/errors"
-	"infinite-bookmarker/internal/shared/modules/helpers/identity"
-	"infinite-bookmarker/internal/shared/modules/utilities"
+	"infinite-ugc-haven/internal/shared/modules/errors"
+	"infinite-ugc-haven/internal/shared/modules/helpers/identity"
+	"infinite-ugc-haven/internal/shared/modules/utilities"
 
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/huh/spinner"
@@ -14,7 +14,9 @@ func DisplayBaseOptions() error {
 	err := huh.NewSelect[string]().
 		Title("What would like to do today?").
 		Options(
-			huh.NewOption(BOOKMARK, BOOKMARK),
+			huh.NewOption(BOOKMARK_FILES, BOOKMARK_FILES),
+			huh.NewOption(CLONE_FILES, CLONE_FILES),
+			huh.NewOption(BUNDLE_FILES, BUNDLE_FILES),
 			huh.NewOption(SHOW_CREDITS, SHOW_CREDITS),
 			huh.NewOption(SIGN_OUT, SIGN_OUT),
 			huh.NewOption(EXIT, EXIT),
@@ -26,7 +28,7 @@ func DisplayBaseOptions() error {
 
 	if option == SHOW_CREDITS {
 		return DisplayCredits()
-	} else if option == BOOKMARK {
+	} else if option == BOOKMARK_FILES {
 		return DisplayBookmarkOptions()
 	} else if option == SIGN_OUT {
 		var confirm bool
@@ -59,11 +61,7 @@ func DisplayCredits() error {
 		huh.NewOption(GO_BACK, GO_BACK),
 	).Value(&option).Run()
 
-	if err != nil {
-		return errors.Format(err.Error(), errors.ErrPrompt)
-	}
-
-	if option == GO_BACK {
+	if err != nil || option == GO_BACK {
 		return DisplayBaseOptions()
 	}
 
@@ -83,7 +81,7 @@ func DisplayCredits() error {
 	return DisplayBaseOptions()
 }
 
-func DisplayAskOpenAuth() bool {
+func DisplayRetryAuth() bool {
 	var confirm bool
 	huh.NewConfirm().
 		Title("❌ The authentication has failed; would you like to retry?").

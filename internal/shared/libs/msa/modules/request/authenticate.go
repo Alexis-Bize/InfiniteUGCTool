@@ -1,15 +1,16 @@
-package msaRequest
+package msa_req
 
 import (
 	"fmt"
-	"infinite-bookmarker/internal/shared/libs/msa"
-	"infinite-bookmarker/internal/shared/modules/errors"
-	"infinite-bookmarker/internal/shared/modules/utilities/request"
 	"io"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
+
+	"infinite-ugc-haven/internal/shared/libs/msa"
+	"infinite-ugc-haven/internal/shared/modules/errors"
+	"infinite-ugc-haven/internal/shared/modules/utilities/request"
 
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/huh/spinner"
@@ -56,6 +57,7 @@ func Authenticate(credentials msa.LiveCredentials, options msa.LiveClientAuthOpt
 	}
 
 	body, err := io.ReadAll(resp.Body)
+	fmt.Println(string(body))
 	if err != nil {
 		return resp, errors.Format(err.Error(), errors.ErrInternal)
 	} else if !strings.Contains(string(body), "PROOF.Type") {

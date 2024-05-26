@@ -1,13 +1,14 @@
-package promptService
+package prompt_svc
 
 import (
 	"fmt"
-	identityService "infinite-bookmarker/internal/services/identity"
-	halowaypointRequest "infinite-bookmarker/internal/shared/libs/halowaypoint/modules/request"
-	"infinite-bookmarker/internal/shared/modules/errors"
 	"os"
 	"regexp"
 	"strings"
+
+	identity_svc "infinite-ugc-haven/internal/services/identity"
+	halowaypoint_req "infinite-ugc-haven/internal/shared/libs/halowaypoint/modules/request"
+	"infinite-ugc-haven/internal/shared/modules/errors"
 
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/huh/spinner"
@@ -16,26 +17,24 @@ import (
 func DisplayBookmarkOptions() error {
 	var option string
 	err := huh.NewSelect[string]().
-		Title("What would like to bookmark?").
+		Title("🔖 What would like to bookmark?").
 		Options(
-			huh.NewOption(BOOKMARK_MAP, BOOKMARK_MAP),
-			huh.NewOption(BOOKMARK_MODE, BOOKMARK_MODE),
-			huh.NewOption(BOOKMARK_FILM, BOOKMARK_FILM),
+			huh.NewOption(MAP, MAP),
+			huh.NewOption(MODE, MODE),
+			huh.NewOption(FILM, FILM),
 			huh.NewOption(GO_BACK, GO_BACK),
 		).Value(&option).Run()
 
-	if err != nil {
-		return errors.Format(err.Error(), errors.ErrPrompt)
-	} else if option == GO_BACK {
+	if err != nil || option == GO_BACK {
 		return DisplayBaseOptions()
 	}
 
-	currentIdentity, err := identityService.GetActiveIdentity()
+	currentIdentity, err := identity_svc.GetActiveIdentity()
 	if err != nil {
 		return err
 	}
 
-	if option == BOOKMARK_FILM {
+	if option == FILM {
 		matchID, err := DisplayMatchGrabPrompt()
 		if err != nil {
 			if !errors.MayBe(err, errors.ErrPrompt) {
@@ -47,13 +46,13 @@ func DisplayBookmarkOptions() error {
 
 		spinner.New().Title("Fetching...").Run()
 
-		stats, err := halowaypointRequest.GetMatchStats(currentIdentity.SpartanToken.Value, matchID)
+		stats, err := halowaypoint_req.GetMatchStats(currentIdentity.SpartanToken.Value, matchID)
 		if err != nil {
 			os.Stdout.WriteString("❌ Invalid match ID...\n")
 			return DisplayBookmarkOptions()
 		}
 
-		film, err := halowaypointRequest.GetMatchFilm(currentIdentity.SpartanToken.Value, matchID)
+		film, err := halowaypoint_req.GetMatchFilm(currentIdentity.SpartanToken.Value, matchID)
 		if err != nil {
 			os.Stdout.WriteString("❌ Film not available...\n")
 			return DisplayBookmarkOptions()
@@ -75,14 +74,18 @@ func DisplayBookmarkOptions() error {
 		)
 	}
 
-	if option == BOOKMARK_MAP || option == BOOKMARK_MODE {
+	if option == MAP || option == MODE {
 		var askForAssets bool
-		huh.NewConfirm().
+		err := huh.NewConfirm().
 			Title("Would you like to bookmark the asset from an existing match?").
 			Affirmative("No, I know what I'm doing.").
 			Negative("Yes please!").
 			Value(&askForAssets).
 			Run()
+
+		if err != nil {
+			return DisplayBookmarkOptions()
+		}
 
 		if askForAssets {
 			assetID, assetVersionID, err := DisplayBookmarkVariantPrompt()
@@ -94,7 +97,7 @@ func DisplayBookmarkOptions() error {
 				return DisplayBookmarkOptions()
 			}
 
-			if option == BOOKMARK_MAP {
+			if option == MAP {
 				return bookmarkAsset(
 					currentIdentity.XboxNetwork.Xuid,
 					currentIdentity.SpartanToken.Value,
@@ -102,7 +105,7 @@ func DisplayBookmarkOptions() error {
 					assetID,
 					assetVersionID,
 				)
-			} else if option == BOOKMARK_MODE {
+			} else if option == MODE {
 				return bookmarkAsset(
 					currentIdentity.XboxNetwork.Xuid,
 					currentIdentity.SpartanToken.Value,
@@ -126,13 +129,13 @@ func DisplayBookmarkOptions() error {
 
 		spinner.New().Title("Fetching...").Run()
 
-		stats, err := halowaypointRequest.GetMatchStats(currentIdentity.SpartanToken.Value, matchID)
+		stats, err := halowaypoint_req.GetMatchStats(currentIdentity.SpartanToken.Value, matchID)
 		if err != nil {
 			os.Stdout.WriteString("❌ Invalid match ID...\n")
 			return DisplayBookmarkOptions()
 		}
 
-		if option == BOOKMARK_MAP {
+		if option == MAP {
 			os.Stdout.WriteString(strings.Join([]string{
 				fmt.Sprintf("Match Details (ID: %s)", stats.MatchID),
 				"│ MapVariant",
@@ -148,7 +151,7 @@ func DisplayBookmarkOptions() error {
 				stats.MatchInfo.MapVariant.AssetID,
 				stats.MatchInfo.MapVariant.VersionID,
 			)
-		} else if option == BOOKMARK_MODE {
+		} else if option == MODE {
 			os.Stdout.WriteString(strings.Join([]string{
 				fmt.Sprintf("Match Details (ID: %s)", stats.MatchID),
 				"│ UgcGameVariant",
@@ -167,7 +170,7 @@ func DisplayBookmarkOptions() error {
 		}
 	}
 
-	return nil
+	return DisplayBaseOptions()
 }
 
 func DisplayMatchGrabPrompt() (string, error) {
@@ -239,19 +242,19 @@ func DisplayBookmarkVariantPrompt() (string, string, error) {
 
 func displayAssetCloneFallbackOptions(xuid string, spartanToken string, category string, assetID string, assetVersionID string) error {
 	var ignoreCloning bool
-	huh.NewConfirm().
+	err := huh.NewConfirm().
 		Title("The desired asset is not published; would you like to try cloning it in your files instead?").
 		Affirmative("No, that's ok.").
 		Negative("Yes please!").
 		Value(&ignoreCloning).
 		Run()
 
-	if ignoreCloning {
+	if err != nil || ignoreCloning {
 		return DisplayBookmarkOptions()
 	}
 
 	spinner.New().Title("Cloning...").Run()
-	err := halowaypointRequest.CloneAsset(xuid, spartanToken, category, assetID, assetVersionID)
+	err = halowaypoint_req.CloneAsset(xuid, spartanToken, category, assetID, assetVersionID)
 	if err != nil {
 		os.Stdout.WriteString("❌ Failed to clone the desired file...\n")
 		return DisplayBookmarkOptions()
@@ -278,7 +281,7 @@ func bookmarkAsset(xuid string, spartanToken string, category string, assetID st
 	spinner.New().Title("Bookmarking...").Run()
 
 	if category != "films" {
-		err = halowaypointRequest.PingPublishedAsset(spartanToken, category, assetID)
+		err = halowaypoint_req.PingPublishedAsset(spartanToken, category, assetID)
 		if err != nil {
 			if errors.MayBe(err, errors.ErrNotFound) {
 				if assetVersionID != "" {
@@ -294,7 +297,7 @@ func bookmarkAsset(xuid string, spartanToken string, category string, assetID st
 		}
 	}
 
-	err = halowaypointRequest.Bookmark(xuid, spartanToken, category, assetID, assetVersionID)
+	err = halowaypoint_req.Bookmark(xuid, spartanToken, category, assetID, assetVersionID)
 	if err != nil {
 		os.Stdout.WriteString("❌ Something went wrong...\n")
 		return DisplayBookmarkOptions()

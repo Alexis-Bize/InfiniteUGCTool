@@ -1,14 +1,15 @@
-package halowaypointRequest
+package halowaypoint_req
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"infinite-bookmarker/internal/shared/libs/halowaypoint"
-	"infinite-bookmarker/internal/shared/modules/errors"
-	"infinite-bookmarker/internal/shared/modules/utilities/request"
 	"io"
 	"net/http"
+
+	"infinite-ugc-haven/internal/shared/libs/halowaypoint"
+	"infinite-ugc-haven/internal/shared/modules/errors"
+	"infinite-ugc-haven/internal/shared/modules/utilities/request"
 )
 
 func Bookmark(xuid string, spartanToken string, category string, assetID string, assetVersionID string) error {

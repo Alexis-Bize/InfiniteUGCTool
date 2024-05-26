@@ -1,8 +1,9 @@
-package halowaypointRequest
+package halowaypoint_req
 
 import (
-	"infinite-bookmarker/internal/shared/modules/errors"
 	"net/http"
+
+	"infinite-ugc-haven/internal/shared/modules/errors"
 )
 
 func OnResponse(resp *http.Response) error {

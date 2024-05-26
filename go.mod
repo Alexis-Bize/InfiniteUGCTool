@@ -1,4 +1,4 @@
-module infinite-bookmarker
+module infinite-ugc-haven
 
 go 1.22.3
 

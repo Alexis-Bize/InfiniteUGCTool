@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"infinite-bookmarker/internal"
-	promptService "infinite-bookmarker/internal/services/prompt"
-	"infinite-bookmarker/internal/shared/modules/errors"
 	"os"
+
+	"infinite-ugc-haven/internal"
+	prompt_svc "infinite-ugc-haven/internal/services/prompt"
+	"infinite-ugc-haven/internal/shared/modules/errors"
 
 	"github.com/joho/godotenv"
 )
@@ -25,10 +26,10 @@ func main() {
 func exec(isRetry bool) error {
 	var err error
 
-	err = promptService.StartAuthFlow(isRetry)
+	err = prompt_svc.StartAuthFlow(isRetry)
 	if err != nil {
 		if errors.MayBe(err, errors.ErrAuthFailure) {
-			if promptService.DisplayAskOpenAuth() {
+			if prompt_svc.DisplayRetryAuth() {
 				return exec(true)
 			}
 		}
@@ -36,6 +37,6 @@ func exec(isRetry bool) error {
 		return err
 	}
 
-	err = promptService.DisplayBaseOptions()
+	err = prompt_svc.DisplayBaseOptions()
 	return err
 }

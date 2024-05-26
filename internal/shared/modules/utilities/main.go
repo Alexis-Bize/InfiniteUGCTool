@@ -2,9 +2,10 @@ package utilities
 
 import (
 	"fmt"
-	"infinite-bookmarker/internal/shared/modules/errors"
 	"os/exec"
 	"runtime"
+
+	"infinite-ugc-haven/internal/shared/modules/errors"
 )
 
 // https://gist.github.com/hyg/9c4afcd91fe24316cbf0
