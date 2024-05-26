@@ -1,2 +1,3 @@
-NAME="InfiniteUGCHaven"
-VERSION="0.4.0"
+APP_NAME="InfiniteUGCHaven"
+APP_VERSION="0.4.0"
+APP_GITHUB="https://github.com/Alexis-Bize/InfiniteUGCHaven"

@@ -22,9 +22,7 @@ func DisplayCloneOptions() error {
 			huh.NewOption(GO_BACK, GO_BACK),
 		).Value(&option).Run()
 
-	if err != nil {
-		return errors.Format(err.Error(), errors.ErrPrompt)
-	} else if option == GO_BACK {
+	if err != nil || option == GO_BACK {
 		return DisplayBaseOptions()
 	}
 
@@ -36,28 +34,28 @@ func DisplayCloneOptions() error {
 	if option == MAP || option == MODE {
 		var askForAssets bool
 		err := huh.NewConfirm().
-			Title("Would you like to bookmark the asset from an existing match?").
+			Title("🔄 Would you like to clone the asset from an existing match?").
 			Affirmative("No, I know what I'm doing.").
 			Negative("Yes please!").
 			Value(&askForAssets).
 			Run()
 
 		if err != nil {
-			return DisplayBookmarkOptions()
+			return DisplayCloneOptions()
 		}
 
 		if askForAssets {
-			assetID, assetVersionID, err := DisplayBookmarkVariantPrompt()
+			assetID, assetVersionID, err := displayVariantDetailsPrompt()
 			if err != nil {
 				if !errors.MayBe(err, errors.ErrPrompt) {
 					os.Stdout.WriteString("❌ Invalid input...\n")
 				}
 
-				return DisplayBookmarkOptions()
+				return DisplayCloneOptions()
 			}
 
 			if option == MAP {
-				return bookmarkAsset(
+				return cloneAsset(
 					currentIdentity.XboxNetwork.Xuid,
 					currentIdentity.SpartanToken.Value,
 					"maps",
@@ -65,7 +63,7 @@ func DisplayCloneOptions() error {
 					assetVersionID,
 				)
 			} else if option == MODE {
-				return bookmarkAsset(
+				return cloneAsset(
 					currentIdentity.XboxNetwork.Xuid,
 					currentIdentity.SpartanToken.Value,
 					"ugcgamevariants",
@@ -74,16 +72,16 @@ func DisplayCloneOptions() error {
 				)
 			}
 
-			return nil
+			return DisplayCloneOptions()
 		}
 
-		matchID, err := DisplayMatchGrabPrompt()
+		matchID, err := displayMatchGrabPrompt()
 		if err != nil {
 			if !errors.MayBe(err, errors.ErrPrompt) {
 				os.Stdout.WriteString("❌ Invalid input...\n")
 			}
 
-			return DisplayBookmarkOptions()
+			return DisplayCloneOptions()
 		}
 
 		spinner.New().Title("Fetching...").Run()
@@ -91,7 +89,7 @@ func DisplayCloneOptions() error {
 		stats, err := halowaypoint_req.GetMatchStats(currentIdentity.SpartanToken.Value, matchID)
 		if err != nil {
 			os.Stdout.WriteString("❌ Invalid match ID...\n")
-			return DisplayBookmarkOptions()
+			return DisplayCloneOptions()
 		}
 
 		if option == MAP {
@@ -103,7 +101,7 @@ func DisplayCloneOptions() error {
 				"",
 			}, "\n"))
 
-			return bookmarkAsset(
+			return cloneAsset(
 				currentIdentity.XboxNetwork.Xuid,
 				currentIdentity.SpartanToken.Value,
 				"maps",
@@ -119,7 +117,7 @@ func DisplayCloneOptions() error {
 				"",
 			}, "\n"))
 
-			return bookmarkAsset(
+			return cloneAsset(
 				currentIdentity.XboxNetwork.Xuid,
 				currentIdentity.SpartanToken.Value,
 				"ugcgamevariants",
@@ -129,5 +127,17 @@ func DisplayCloneOptions() error {
 		}
 	}
 
-	return nil
+	return DisplayCloneOptions()
+}
+
+func cloneAsset(xuid string, spartanToken string, category string, assetID string, assetVersionID string) error {
+	spinner.New().Title("Cloning...").Run()
+	err := halowaypoint_req.CloneAsset(xuid, spartanToken, category, assetID, assetVersionID)
+	if err != nil {
+		os.Stdout.WriteString("❌ Failed to clone the desired file...\n")
+		return DisplayCloneOptions()
+	}
+
+	os.Stdout.WriteString("🎉 Cloned with success!\n")
+	return DisplayCloneOptions()
 }

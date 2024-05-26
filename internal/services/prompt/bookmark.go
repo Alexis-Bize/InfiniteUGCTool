@@ -3,7 +3,6 @@ package prompt_svc
 import (
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 
 	identity_svc "infinite-ugc-haven/internal/services/identity"
@@ -35,7 +34,7 @@ func DisplayBookmarkOptions() error {
 	}
 
 	if option == FILM {
-		matchID, err := DisplayMatchGrabPrompt()
+		matchID, err := displayMatchGrabPrompt()
 		if err != nil {
 			if !errors.MayBe(err, errors.ErrPrompt) {
 				os.Stdout.WriteString("❌ Invalid input...\n")
@@ -77,7 +76,7 @@ func DisplayBookmarkOptions() error {
 	if option == MAP || option == MODE {
 		var askForAssets bool
 		err := huh.NewConfirm().
-			Title("Would you like to bookmark the asset from an existing match?").
+			Title("🔖 Would you like to bookmark the asset from an existing match?").
 			Affirmative("No, I know what I'm doing.").
 			Negative("Yes please!").
 			Value(&askForAssets).
@@ -88,7 +87,7 @@ func DisplayBookmarkOptions() error {
 		}
 
 		if askForAssets {
-			assetID, assetVersionID, err := DisplayBookmarkVariantPrompt()
+			assetID, assetVersionID, err := displayVariantDetailsPrompt()
 			if err != nil {
 				if !errors.MayBe(err, errors.ErrPrompt) {
 					os.Stdout.WriteString("❌ Invalid input...\n")
@@ -118,7 +117,7 @@ func DisplayBookmarkOptions() error {
 			return nil
 		}
 
-		matchID, err := DisplayMatchGrabPrompt()
+		matchID, err := displayMatchGrabPrompt()
 		if err != nil {
 			if !errors.MayBe(err, errors.ErrPrompt) {
 				os.Stdout.WriteString("❌ Invalid input...\n")
@@ -170,74 +169,7 @@ func DisplayBookmarkOptions() error {
 		}
 	}
 
-	return DisplayBaseOptions()
-}
-
-func DisplayMatchGrabPrompt() (string, error) {
-	var value string
-	var err error 
-
-	err = huh.NewInput().
-		Title("Please specify a match ID or a valid match URL").
-		Description("Leafapp.co, SpartanRecord.com, HaloDataHive.com and such are supported").
-		Value(&value).
-		Run()
-
-	if err != nil {
-		return "", errors.Format(err.Error(), errors.ErrPrompt)
-	}
-
-	matchID, err := extractUUID(value)
-	if err != nil {
-		return "", err
-	}
-
-	return matchID, nil
-}
-
-func DisplayBookmarkVariantPrompt() (string, string, error) {
-	var assetID string
-	var assetVersionID string
-	var err error
-
-	err = huh.NewInput().
-		Title("Please specify a \"AssetID\" (GUID)").
-		Description("e.g., ae4daed6-251a-4c2f-bc6f-eb25eac1bfd").
-		Value(&assetID).
-		Validate(func (input string) error {
-			_, err := extractUUID(input)
-			if err != nil {
-				return errors.New("invalid GUID")
-			}
-
-			return nil
-		}).Run()
-
-	if err != nil {
-		return "", "", errors.Format(err.Error(), errors.ErrPrompt)
-	}
-
-	err = huh.NewInput().
-		Title("Please specify a \"AssetVariantID\" (GUID)").
-		Description("This value is optional for published files").
-		Value(&assetVersionID).
-		Run()
-
-	if err != nil {
-		return "", "", errors.Format(err.Error(), errors.ErrPrompt)
-	}
-
-	assetID = strings.TrimSpace(assetID)
-	assetVersionID = strings.TrimSpace(assetVersionID)
-
-	if assetVersionID != "" {
-		_, err := extractUUID(assetVersionID)
-		if err != nil {
-			return "", "", err
-		}
-	}
-
-	return assetID, assetVersionID, nil
+	return DisplayBookmarkOptions()
 }
 
 func displayAssetCloneFallbackOptions(xuid string, spartanToken string, category string, assetID string, assetVersionID string) error {
@@ -253,27 +185,7 @@ func displayAssetCloneFallbackOptions(xuid string, spartanToken string, category
 		return DisplayBookmarkOptions()
 	}
 
-	spinner.New().Title("Cloning...").Run()
-	err = halowaypoint_req.CloneAsset(xuid, spartanToken, category, assetID, assetVersionID)
-	if err != nil {
-		os.Stdout.WriteString("❌ Failed to clone the desired file...\n")
-		return DisplayBookmarkOptions()
-	}
-
-	os.Stdout.WriteString("🎉 Cloned with success!\n")
-	return DisplayBaseOptions()
-}
-
-func extractUUID(value string) (string, error) {
-	const pattern = `[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`
-	re := regexp.MustCompile(pattern)
-	match := re.FindString(strings.TrimSpace(value))
-
-	if match != "" {
-		return match, nil
-	}
-
-	return "", errors.Format("invalid format", errors.ErrUUIDInvalid)
+	return cloneAsset(xuid, spartanToken, category, assetID, assetVersionID)
 }
 
 func bookmarkAsset(xuid string, spartanToken string, category string, assetID string, assetVersionID string) error {
@@ -304,5 +216,5 @@ func bookmarkAsset(xuid string, spartanToken string, category string, assetID st
 	}
 
 	os.Stdout.WriteString("🎉 Bookmarked with success!\n")
-	return DisplayBaseOptions()
+	return DisplayBookmarkOptions()
 }

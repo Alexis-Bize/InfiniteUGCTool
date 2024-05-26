@@ -16,7 +16,6 @@ func DisplayBaseOptions() error {
 		Options(
 			huh.NewOption(BOOKMARK_FILES, BOOKMARK_FILES),
 			huh.NewOption(CLONE_FILES, CLONE_FILES),
-			huh.NewOption(BUNDLE_FILES, BUNDLE_FILES),
 			huh.NewOption(SHOW_CREDITS, SHOW_CREDITS),
 			huh.NewOption(SIGN_OUT, SIGN_OUT),
 			huh.NewOption(EXIT, EXIT),
@@ -30,6 +29,8 @@ func DisplayBaseOptions() error {
 		return DisplayCredits()
 	} else if option == BOOKMARK_FILES {
 		return DisplayBookmarkOptions()
+	} else if option == CLONE_FILES {
+		return DisplayCloneOptions()
 	} else if option == SIGN_OUT {
 		var confirm bool
 		huh.NewConfirm().
@@ -75,7 +76,7 @@ func DisplayCredits() error {
 		case OPEN_X_3:
 			utilities.OpenBrowser("https://x.com/gruntdotapi")
 		case OPEN_GITHUB:
-			utilities.OpenBrowser("https://github.com/Alexis-Bize/Infinite-Bookmarker")
+			utilities.OpenBrowser("https://github.com/Alexis-Bize/InfiniteUGCHaven")
 	}
 
 	return DisplayBaseOptions()
