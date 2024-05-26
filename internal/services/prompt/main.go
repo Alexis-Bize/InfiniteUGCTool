@@ -28,7 +28,7 @@ const (
 	OPEN_X_1 = "Made by: Zeny IC"
 	OPEN_X_2 = "Original idea: Okom"
 	OPEN_X_3 = "Supporter: Grunt.API"
-	OPEN_GITHUB = "Source code: Alexis-Bize/InfiniteUGCHaven"
+	OPEN_GITHUB = "Source code: GitHub"
 )
 
 func displayMatchGrabPrompt() (string, error) {

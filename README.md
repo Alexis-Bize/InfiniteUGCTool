@@ -1,4 +1,4 @@
-# Infinite UGC Haven
+# Infinite UGC Tool
 
 An interactive CLI to bookmark, clone and manage **Halo Infinite** UGC files.
 
@@ -6,7 +6,7 @@ An interactive CLI to bookmark, clone and manage **Halo Infinite** UGC files.
 
 ## Installation
 
-Download and unzip one of the files from the [latest release](https://github.com/Alexis-Bize/InfiniteUGCHaven/releases/latest) for your current OS.
+Download and unzip one of the files from the [latest release](https://github.com/Alexis-Bize/InfiniteUGCTool/releases/latest) for your current OS.
 
 ## Building From Source
 
