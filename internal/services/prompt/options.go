@@ -1,9 +1,10 @@
 package prompt_svc
 
 import (
-	"infinite-ugc-haven/internal/shared/modules/errors"
-	"infinite-ugc-haven/internal/shared/modules/helpers/identity"
-	"infinite-ugc-haven/internal/shared/modules/utilities"
+	"infinite-ugc-tool/internal"
+	"infinite-ugc-tool/internal/shared/modules/errors"
+	"infinite-ugc-tool/internal/shared/modules/helpers/identity"
+	"infinite-ugc-tool/internal/shared/modules/utilities"
 
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/huh/spinner"
@@ -66,8 +67,6 @@ func DisplayCredits() error {
 		return DisplayBaseOptions()
 	}
 
-	spinner.New().Title("Attempting to open your browser...").Run()
-
 	switch option {
 		case OPEN_X_1:
 			utilities.OpenBrowser("https://x.com/zeny_ic")
@@ -76,7 +75,7 @@ func DisplayCredits() error {
 		case OPEN_X_3:
 			utilities.OpenBrowser("https://x.com/gruntdotapi")
 		case OPEN_GITHUB:
-			utilities.OpenBrowser("https://github.com/Alexis-Bize/InfiniteUGCHaven")
+			utilities.OpenBrowser(internal.GetConfig().GitHub)
 	}
 
 	return DisplayBaseOptions()

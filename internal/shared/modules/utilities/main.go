@@ -5,12 +5,15 @@ import (
 	"os/exec"
 	"runtime"
 
-	"infinite-ugc-haven/internal/shared/modules/errors"
+	"infinite-ugc-tool/internal/shared/modules/errors"
+
+	"github.com/charmbracelet/huh/spinner"
 )
 
 // https://gist.github.com/hyg/9c4afcd91fe24316cbf0
 func OpenBrowser(url string) error {
 	var err error
+	spinner.New().Title("Attempting to open your browser...").Run()
 
 	switch runtime.GOOS {
 	case "linux":

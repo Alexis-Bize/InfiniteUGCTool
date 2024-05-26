@@ -3,7 +3,7 @@ package halowaypoint_req
 import (
 	"net/http"
 
-	"infinite-ugc-haven/internal/shared/modules/errors"
+	"infinite-ugc-tool/internal/shared/modules/errors"
 )
 
 func OnResponse(resp *http.Response) error {

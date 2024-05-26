@@ -2,9 +2,9 @@ package prompt_svc
 
 import (
 	"fmt"
-	identity_svc "infinite-ugc-haven/internal/services/identity"
-	halowaypoint_req "infinite-ugc-haven/internal/shared/libs/halowaypoint/modules/request"
-	"infinite-ugc-haven/internal/shared/modules/errors"
+	identity_svc "infinite-ugc-tool/internal/services/identity"
+	halowaypoint_req "infinite-ugc-tool/internal/shared/libs/halowaypoint/modules/request"
+	"infinite-ugc-tool/internal/shared/modules/errors"
 	"os"
 	"strings"
 

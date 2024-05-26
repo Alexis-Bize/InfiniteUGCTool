@@ -1,8 +1,9 @@
-module infinite-ugc-haven
+module infinite-ugc-tool
 
 go 1.22.3
 
 require (
+	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/charmbracelet/huh v0.3.0
 	github.com/charmbracelet/huh/spinner v0.0.0-20240521183146-8c5d66193f2b
 	github.com/joho/godotenv v1.5.1

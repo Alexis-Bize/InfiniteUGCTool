@@ -1,7 +1,7 @@
 package prompt_svc
 
 import (
-	"infinite-ugc-haven/internal/shared/modules/errors"
+	"infinite-ugc-tool/internal/shared/modules/errors"
 	"regexp"
 	"strings"
 

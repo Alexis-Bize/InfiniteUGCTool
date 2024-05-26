@@ -8,9 +8,9 @@ import (
 	"regexp"
 	"strings"
 
-	"infinite-ugc-haven/internal/shared/libs/msa"
-	"infinite-ugc-haven/internal/shared/modules/errors"
-	"infinite-ugc-haven/internal/shared/modules/utilities/request"
+	"infinite-ugc-tool/internal/shared/libs/msa"
+	"infinite-ugc-tool/internal/shared/modules/errors"
+	"infinite-ugc-tool/internal/shared/modules/utilities/request"
 
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/huh/spinner"

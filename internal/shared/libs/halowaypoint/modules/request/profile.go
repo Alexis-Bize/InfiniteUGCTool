@@ -5,9 +5,9 @@ import (
 	"io"
 	"net/http"
 
-	"infinite-ugc-haven/internal/shared/libs/halowaypoint"
-	"infinite-ugc-haven/internal/shared/modules/errors"
-	"infinite-ugc-haven/internal/shared/modules/utilities/request"
+	"infinite-ugc-tool/internal/shared/libs/halowaypoint"
+	"infinite-ugc-tool/internal/shared/modules/errors"
+	"infinite-ugc-tool/internal/shared/modules/utilities/request"
 )
 
 func GetUserProfile(spartanToken string) (halowaypoint.UserProfileResponse, error) {

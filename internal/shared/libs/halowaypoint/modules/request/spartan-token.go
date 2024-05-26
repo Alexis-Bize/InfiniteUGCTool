@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"infinite-ugc-haven/internal/shared/modules/errors"
-	"infinite-ugc-haven/internal/shared/modules/utilities/request"
+	"infinite-ugc-tool/internal/shared/modules/errors"
+	"infinite-ugc-tool/internal/shared/modules/utilities/request"
 )
 
 func ExtractSpartanTokenPostCallback(location string) (string, error) {

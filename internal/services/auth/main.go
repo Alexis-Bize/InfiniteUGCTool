@@ -1,11 +1,11 @@
 package auth_svc
 
 import (
-	"infinite-ugc-haven/internal/shared/libs/halowaypoint"
-	halowaypoint_req "infinite-ugc-haven/internal/shared/libs/halowaypoint/modules/request"
-	"infinite-ugc-haven/internal/shared/libs/msa"
-	msa_req "infinite-ugc-haven/internal/shared/libs/msa/modules/request"
-	"infinite-ugc-haven/internal/shared/modules/errors"
+	"infinite-ugc-tool/internal/shared/libs/halowaypoint"
+	halowaypoint_req "infinite-ugc-tool/internal/shared/libs/halowaypoint/modules/request"
+	"infinite-ugc-tool/internal/shared/libs/msa"
+	msa_req "infinite-ugc-tool/internal/shared/libs/msa/modules/request"
+	"infinite-ugc-tool/internal/shared/modules/errors"
 )
 
 func AuthenticateWithCredentials(email string, password string) (halowaypoint.UserProfileResponse, string, error) {

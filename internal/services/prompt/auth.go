@@ -6,10 +6,10 @@ import (
 	"os"
 	"strings"
 
-	auth_svc "infinite-ugc-haven/internal/services/auth"
-	identity_svc "infinite-ugc-haven/internal/services/identity"
-	"infinite-ugc-haven/internal/shared/modules/errors"
-	"infinite-ugc-haven/internal/shared/modules/helpers/identity"
+	auth_svc "infinite-ugc-tool/internal/services/auth"
+	identity_svc "infinite-ugc-tool/internal/services/identity"
+	"infinite-ugc-tool/internal/shared/modules/errors"
+	"infinite-ugc-tool/internal/shared/modules/helpers/identity"
 
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/huh/spinner"

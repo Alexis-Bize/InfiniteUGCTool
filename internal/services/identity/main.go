@@ -4,10 +4,10 @@ import (
 	"os"
 	"time"
 
-	auth_svc "infinite-ugc-haven/internal/services/auth"
-	"infinite-ugc-haven/internal/shared/libs/halowaypoint"
-	"infinite-ugc-haven/internal/shared/modules/errors"
-	"infinite-ugc-haven/internal/shared/modules/helpers/identity"
+	auth_svc "infinite-ugc-tool/internal/services/auth"
+	"infinite-ugc-tool/internal/shared/libs/halowaypoint"
+	"infinite-ugc-tool/internal/shared/modules/errors"
+	"infinite-ugc-tool/internal/shared/modules/helpers/identity"
 
 	"github.com/charmbracelet/huh/spinner"
 )
