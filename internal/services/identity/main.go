@@ -1,12 +1,13 @@
-package identityService
+package identity_svc
 
 import (
-	authService "infinite-bookmarker/internal/services/auth"
-	"infinite-bookmarker/internal/shared/libs/halowaypoint"
-	"infinite-bookmarker/internal/shared/modules/errors"
-	"infinite-bookmarker/internal/shared/modules/helpers/identity"
 	"os"
 	"time"
+
+	auth_svc "infinite-ugc-tool/internal/services/auth"
+	"infinite-ugc-tool/internal/shared/libs/halowaypoint"
+	"infinite-ugc-tool/internal/shared/modules/errors"
+	"infinite-ugc-tool/internal/shared/modules/helpers/identity"
 
 	"github.com/charmbracelet/huh/spinner"
 )
@@ -39,7 +40,7 @@ func RefreshIdentityIfRequired(currentIdentity identity.Identity) (identity.Iden
 
 	if shouldRefresh {
 		spinner.New().Title("Refreshing your active session...").Run()
-		profile, spartanToken, err := authService.AuthenticateWithCredentials(currentIdentity.User.Email, currentIdentity.User.Password)
+		profile, spartanToken, err := auth_svc.AuthenticateWithCredentials(currentIdentity.User.Email, currentIdentity.User.Password)
 		if err != nil {
 			identity.SaveIdentity(identity.Identity{})
 			return identity.Identity{}, err

@@ -1,12 +1,13 @@
-package halowaypointRequest
+package halowaypoint_req
 
 import (
 	"encoding/json"
-	"infinite-bookmarker/internal/shared/libs/halowaypoint"
-	"infinite-bookmarker/internal/shared/modules/errors"
-	"infinite-bookmarker/internal/shared/modules/utilities/request"
 	"io"
 	"net/http"
+
+	"infinite-ugc-tool/internal/shared/libs/halowaypoint"
+	"infinite-ugc-tool/internal/shared/modules/errors"
+	"infinite-ugc-tool/internal/shared/modules/utilities/request"
 )
 
 func GetUserProfile(spartanToken string) (halowaypoint.UserProfileResponse, error) {

@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 
-package_name="Infinite-Bookmarker"
+config_file="config.txt"
+
+APP_NAME=$(sed -n 's/^APP_NAME="\([^"]*\)".*/\1/p' "$config_file")
+APP_VERSION=$(sed -n 's/^APP_VERSION="\([^"]*\)".*/\1/p' "$config_file")
+
+package_name="${APP_NAME}-${APP_VERSION}"
 platforms=("windows/amd64" "darwin/amd64")
 
 for platform in "${platforms[@]}"

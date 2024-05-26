@@ -1,9 +1,10 @@
-package promptService
+package prompt_svc
 
 import (
-	"infinite-bookmarker/internal/shared/modules/errors"
-	"infinite-bookmarker/internal/shared/modules/helpers/identity"
-	"infinite-bookmarker/internal/shared/modules/utilities"
+	"infinite-ugc-tool/internal"
+	"infinite-ugc-tool/internal/shared/modules/errors"
+	"infinite-ugc-tool/internal/shared/modules/helpers/identity"
+	"infinite-ugc-tool/internal/shared/modules/utilities"
 
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/huh/spinner"
@@ -14,7 +15,8 @@ func DisplayBaseOptions() error {
 	err := huh.NewSelect[string]().
 		Title("What would like to do today?").
 		Options(
-			huh.NewOption(BOOKMARK, BOOKMARK),
+			huh.NewOption(BOOKMARK_FILES, BOOKMARK_FILES),
+			huh.NewOption(CLONE_FILES, CLONE_FILES),
 			huh.NewOption(SHOW_CREDITS, SHOW_CREDITS),
 			huh.NewOption(SIGN_OUT, SIGN_OUT),
 			huh.NewOption(EXIT, EXIT),
@@ -26,8 +28,10 @@ func DisplayBaseOptions() error {
 
 	if option == SHOW_CREDITS {
 		return DisplayCredits()
-	} else if option == BOOKMARK {
+	} else if option == BOOKMARK_FILES {
 		return DisplayBookmarkOptions()
+	} else if option == CLONE_FILES {
+		return DisplayCloneOptions()
 	} else if option == SIGN_OUT {
 		var confirm bool
 		huh.NewConfirm().
@@ -59,15 +63,9 @@ func DisplayCredits() error {
 		huh.NewOption(GO_BACK, GO_BACK),
 	).Value(&option).Run()
 
-	if err != nil {
-		return errors.Format(err.Error(), errors.ErrPrompt)
-	}
-
-	if option == GO_BACK {
+	if err != nil || option == GO_BACK {
 		return DisplayBaseOptions()
 	}
-
-	spinner.New().Title("Attempting to open your browser...").Run()
 
 	switch option {
 		case OPEN_X_1:
@@ -77,13 +75,13 @@ func DisplayCredits() error {
 		case OPEN_X_3:
 			utilities.OpenBrowser("https://x.com/gruntdotapi")
 		case OPEN_GITHUB:
-			utilities.OpenBrowser("https://github.com/Alexis-Bize/Infinite-Bookmarker")
+			utilities.OpenBrowser(internal.GetConfig().GitHub)
 	}
 
 	return DisplayBaseOptions()
 }
 
-func DisplayAskOpenAuth() bool {
+func DisplayRetryAuth() bool {
 	var confirm bool
 	huh.NewConfirm().
 		Title("❌ The authentication has failed; would you like to retry?").

@@ -1,0 +1,3 @@
+APP_NAME="InfiniteUGCTool"
+APP_VERSION="0.4.0"
+APP_GITHUB="https://github.com/Alexis-Bize/InfiniteUGCTool"

@@ -4,10 +4,11 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"infinite-bookmarker/internal/shared/modules/errors"
 	"io"
 	"os"
 	"runtime"
+
+	"infinite-ugc-tool/internal/shared/modules/errors"
 )
 
 const keyLength = 32

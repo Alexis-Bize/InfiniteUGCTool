@@ -1,14 +1,15 @@
-package promptService
+package prompt_svc
 
 import (
 	"fmt"
-	authService "infinite-bookmarker/internal/services/auth"
-	identityService "infinite-bookmarker/internal/services/identity"
-	"infinite-bookmarker/internal/shared/modules/errors"
-	"infinite-bookmarker/internal/shared/modules/helpers/identity"
 	"net/mail"
 	"os"
 	"strings"
+
+	auth_svc "infinite-ugc-tool/internal/services/auth"
+	identity_svc "infinite-ugc-tool/internal/services/identity"
+	"infinite-ugc-tool/internal/shared/modules/errors"
+	"infinite-ugc-tool/internal/shared/modules/helpers/identity"
 
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/huh/spinner"
@@ -22,7 +23,7 @@ func StartAuthFlow(isRetry bool) error {
 	currentIdentity, _ := identity.GetOrCreateIdentity(identity.Identity{})
 	if currentIdentity != (identity.Identity{}) {
 		os.Stdout.WriteString(fmt.Sprintf("👋 Welcome back, %s!\n", currentIdentity.XboxNetwork.Gamertag))
-		_, err := identityService.RefreshIdentityIfRequired(currentIdentity)
+		_, err := identity_svc.RefreshIdentityIfRequired(currentIdentity)
 		return err
 	}
 
@@ -37,13 +38,13 @@ func StartAuthFlow(isRetry bool) error {
 	}
 
 	spinner.New().Title("Authenticating...").Run()
-	profile, spartanToken, err := authService.AuthenticateWithCredentials(email, password)
+	profile, spartanToken, err := auth_svc.AuthenticateWithCredentials(email, password)
 	if err != nil {
 		return err
 	}
 
 	os.Stdout.WriteString(fmt.Sprintf("✅ Welcome %s!\n", profile.Gamertag))
-	identityService.StoreIdentity(email, password, profile, spartanToken)
+	identity_svc.StoreIdentity(email, password, profile, spartanToken)
 	return nil
 }
 

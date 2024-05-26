@@ -2,12 +2,13 @@ package identity
 
 import (
 	"encoding/json"
-	"infinite-bookmarker/internal"
-	"infinite-bookmarker/internal/shared/modules/crypto"
-	"infinite-bookmarker/internal/shared/modules/errors"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"infinite-ugc-tool/internal"
+	"infinite-ugc-tool/internal/shared/modules/crypto"
+	"infinite-ugc-tool/internal/shared/modules/errors"
 )
 
 const fileName = "identity.bin"
@@ -95,5 +96,5 @@ func getIdentityFilePath() (string, error) {
 		return "", errors.Format(err.Error(), errors.ErrInternal)
 	}
 
-	return filepath.Join(homeDir, strings.ReplaceAll(strings.ToLower(internal.GetConfig().Title), " ", "-"), fileName), nil
+	return filepath.Join(homeDir, strings.ReplaceAll(internal.GetConfig().Name, " ", "-"), fileName), nil
 }

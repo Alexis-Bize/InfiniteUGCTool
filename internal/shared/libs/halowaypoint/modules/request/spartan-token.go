@@ -1,10 +1,11 @@
-package halowaypointRequest
+package halowaypoint_req
 
 import (
-	"infinite-bookmarker/internal/shared/modules/errors"
-	"infinite-bookmarker/internal/shared/modules/utilities/request"
 	"net/http"
 	"net/url"
+
+	"infinite-ugc-tool/internal/shared/modules/errors"
+	"infinite-ugc-tool/internal/shared/modules/utilities/request"
 )
 
 func ExtractSpartanTokenPostCallback(location string) (string, error) {

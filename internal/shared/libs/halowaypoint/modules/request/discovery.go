@@ -1,13 +1,14 @@
-package halowaypointRequest
+package halowaypoint_req
 
 import (
 	"encoding/json"
 	"fmt"
-	"infinite-bookmarker/internal/shared/libs/halowaypoint"
-	"infinite-bookmarker/internal/shared/modules/errors"
-	"infinite-bookmarker/internal/shared/modules/utilities/request"
 	"io"
 	"net/http"
+
+	"infinite-ugc-tool/internal/shared/libs/halowaypoint"
+	"infinite-ugc-tool/internal/shared/modules/errors"
+	"infinite-ugc-tool/internal/shared/modules/utilities/request"
 )
 
 func GetMatchFilm(spartanToken string, matchID string) (halowaypoint.MatchSpectateResponse, error) {
