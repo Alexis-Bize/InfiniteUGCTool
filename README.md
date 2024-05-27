@@ -11,8 +11,8 @@ Download and unzip one of the files from the [latest release](https://github.com
 ## Building From Source
 
 ```shell
-$ chmod +x ./build.sh
-$ ./build.sh
+$ chmod +x ./script/sbuild.sh
+$ ./script/sbuild.sh
 ```
 
 ## Known Issues
