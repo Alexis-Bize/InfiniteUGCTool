@@ -8,8 +8,8 @@ import (
 
 	auth_svc "infinite-ugc-tool/internal/application/services/auth"
 	identity_svc "infinite-ugc-tool/internal/application/services/auth/identity"
+	"infinite-ugc-tool/internal/helpers/identity"
 	"infinite-ugc-tool/pkg/modules/errors"
-	"infinite-ugc-tool/pkg/modules/helpers/identity"
 
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/huh/spinner"

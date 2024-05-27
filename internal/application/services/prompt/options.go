@@ -2,8 +2,8 @@ package prompt_svc
 
 import (
 	"infinite-ugc-tool/configs"
+	"infinite-ugc-tool/internal/helpers/identity"
 	"infinite-ugc-tool/pkg/modules/errors"
-	"infinite-ugc-tool/pkg/modules/helpers/identity"
 	"infinite-ugc-tool/pkg/modules/utilities"
 
 	"github.com/charmbracelet/huh"

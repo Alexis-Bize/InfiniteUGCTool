@@ -5,9 +5,9 @@ import (
 	"time"
 
 	auth_svc "infinite-ugc-tool/internal/application/services/auth"
+	"infinite-ugc-tool/internal/helpers/identity"
 	"infinite-ugc-tool/pkg/libs/halowaypoint"
 	"infinite-ugc-tool/pkg/modules/errors"
-	"infinite-ugc-tool/pkg/modules/helpers/identity"
 
 	"github.com/charmbracelet/huh/spinner"
 )

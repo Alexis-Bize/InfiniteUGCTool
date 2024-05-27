@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"infinite-ugc-tool/configs"
 	prompt_svc "infinite-ugc-tool/internal/application/services/prompt"
+	"infinite-ugc-tool/internal/helpers/release"
 	"infinite-ugc-tool/pkg/modules/errors"
-	"infinite-ugc-tool/pkg/modules/helpers/release"
 	"infinite-ugc-tool/pkg/modules/utilities"
 	"os"
 
