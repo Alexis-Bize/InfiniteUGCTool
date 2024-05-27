@@ -18,7 +18,7 @@ import (
 	"infinite-ugc-tool/internal"
 )
 
-//go:generate goversioninfo -icon=assets/resource/windows/icon-256.ico
+//go:generate goversioninfo -icon=assets/resource/windows/icon_256x256.ico
 
 func main() {
 	internal.Exec()
