@@ -9,10 +9,10 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/robertkrimen/otto v0.4.0
 	github.com/tidwall/gjson v1.17.1
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
-	github.com/akavel/rsrc v0.10.2 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/catppuccin/go v0.2.0 // indirect
@@ -21,7 +21,6 @@ require (
 	github.com/charmbracelet/lipgloss v0.10.1-0.20240506202754-3ee5dcab73cb // indirect
 	github.com/charmbracelet/x/exp/term v0.0.0-20240506152644-8135bef4e495 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
-	github.com/josephspurrier/goversioninfo v1.4.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
@@ -38,5 +37,4 @@ require (
 	golang.org/x/term v0.20.0 // indirect
 	golang.org/x/text v0.15.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

@@ -38,19 +38,24 @@ func RefreshIdentityIfRequired(currentIdentity identity.Identity) (identity.Iden
 		}
 	}
 
-	if shouldRefresh {
-		spinner.New().Title("Refreshing your active session...").Run()
-		profile, spartanToken, err := auth_svc.AuthenticateWithCredentials(currentIdentity.User.Email, currentIdentity.User.Password)
-		if err != nil {
-			identity.SaveIdentity(identity.Identity{})
-			return identity.Identity{}, err
-		}
-
-		os.Stdout.WriteString("✅ Your active session has been refreshed with success!\n")
-		return StoreIdentity(currentIdentity.User.Email, currentIdentity.User.Password, profile, spartanToken)
+	if !shouldRefresh {
+		return currentIdentity, nil
 	}
 
-	return currentIdentity, nil
+	spinner.New().Title("Refreshing your active session...").Run()
+	profile, spartanToken, err := auth_svc.AuthenticateWithCredentials(currentIdentity.User.Email, currentIdentity.User.Password)
+	if err != nil {
+		identity.SaveIdentity(identity.Identity{})
+		return identity.Identity{}, err
+	}
+
+	storedIdentity, err := StoreIdentity(currentIdentity.User.Email, currentIdentity.User.Password, profile, spartanToken)
+	if err != nil {
+		return identity.Identity{}, err
+	}
+
+	os.Stdout.WriteString("✅ Your active session has been refreshed with success!\n")
+	return storedIdentity, nil
 }
 
 func StoreIdentity(email string, password string, profile halowaypoint.UserProfileResponse, spartanToken string) (identity.Identity, error) {
