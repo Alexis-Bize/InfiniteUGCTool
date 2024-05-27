@@ -12,41 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package configs
+package request
 
-import (
-	"embed"
-	"log"
+import "strings"
 
-	"gopkg.in/yaml.v3"
-)
+func GetBaseHeaders(extraHeaders map[string]string) map[string]string {
+	headers := map[string]string{
+		"User-Agent": RequestUserAgent,
+		"Accept-Encoding": "identity",
+	}
 
-//go:embed application.yaml
-var f embed.FS
-var config Config
+	for k, v := range extraHeaders {
+		headers[k] = v
+	}
 
-type Config struct {
-	Name        string `yaml:"name"`
-	Description string `yaml:"description"`
-	Version     string `yaml:"version"`
-	Author      string `yaml:"author"`
-	Repository  string `yaml:"repository"`
+	return headers
 }
 
-func GetConfig() *Config {
-	if config != (Config{}) {
-		return &config
+func ComputeUrl(baseUrl string, path string) string {
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
 	}
 
-	yamlFile, err := f.ReadFile("application.yaml")
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	err = yaml.Unmarshal(yamlFile, &config)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	return &config
+	return baseUrl + path
 }

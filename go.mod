@@ -6,7 +6,6 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/charmbracelet/huh v0.3.0
 	github.com/charmbracelet/huh/spinner v0.0.0-20240521183146-8c5d66193f2b
-	github.com/joho/godotenv v1.5.1
 	github.com/robertkrimen/otto v0.4.0
 	github.com/tidwall/gjson v1.17.1
 	gopkg.in/yaml.v3 v3.0.1

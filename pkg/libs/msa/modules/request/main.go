@@ -12,41 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package configs
+package msa_req
 
 import (
-	"embed"
-	"log"
-
-	"gopkg.in/yaml.v3"
+	"fmt"
+	"net/url"
 )
 
-//go:embed application.yaml
-var f embed.FS
-var config Config
-
-type Config struct {
-	Name        string `yaml:"name"`
-	Description string `yaml:"description"`
-	Version     string `yaml:"version"`
-	Author      string `yaml:"author"`
-	Repository  string `yaml:"repository"`
-}
-
-func GetConfig() *Config {
-	if config != (Config{}) {
-		return &config
-	}
-
-	yamlFile, err := f.ReadFile("application.yaml")
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	err = yaml.Unmarshal(yamlFile, &config)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	return &config
+func BuildAuthorizeUrl(clientId string, scope string, responseType string, redirectUri string, state string) string {
+	return fmt.Sprintf(
+		"https://login.live.com/oauth20_authorize.srf?client_id=%s&scope=%s&response_type=%s&redirect_uri=%s&state=%s&display=touch",
+		url.QueryEscape(clientId),
+		url.QueryEscape(scope),
+		url.QueryEscape(responseType),
+		url.QueryEscape(redirectUri),
+		url.QueryEscape(state),
+	)
 }

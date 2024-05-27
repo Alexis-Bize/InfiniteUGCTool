@@ -1,8 +1,14 @@
 # Infinite UGC Tool
 
+<p>
+    <img alt="InfiniteUGCTool" title="InfiniteUGCTool" src="./assets/resource/darwin/icon_256x256.png" width="256" />
+    <br /><br />
+    <a href="https://github.com/Alexis-Bize/InfiniteUGCTool/releases"><img src="https://img.shields.io/github/release/charmbracelet/huh.svg" alt="Latest Release"></a>
+</p>
+
 An interactive CLI to bookmark, clone and manage **Halo Infinite** UGC files.
 
-![image](/assets/preview.gif?v=1)
+<img alt="InfiniteUGCTool CLI" title="InfiniteUGCTool CLI" src="./assets/preview.gif?v=2" width="600" />
 
 ## Installation
 
@@ -11,13 +17,13 @@ Download and unzip one of the files from the [latest release](https://github.com
 ## Building From Source
 
 ```shell
-$ chmod +x ./script/build.sh
-$ ./script/build.sh
+$ chmod +x ./scripts/build.sh
+$ ./scripts/build.sh
 ```
 
 ## Known Issues
 
--   Windows may flag the application as a threat or virus due to a false positive (https://go.dev/doc/faq#virus)
+-   Windows may flag the application as a threat or virus due to a **false positive** (https://go.dev/doc/faq#virus)
 -   Accounts using 2FA are partially supported (authenticator apps only)
 -   **Halo Infinite** hasn't been able to load or play bookmarked films [since 2022](https://x.com/gruntdotapi/status/1544268951311491072).
 -   [Windows Terminal](https://apps.microsoft.com/detail/9n0dx20hk701) may lose focus and ignore some inputs.
@@ -25,4 +31,4 @@ $ ./script/build.sh
 
 ## Licence
 
-[MIT](/LICENCE)
+[Apache Version 2.0](/LICENCE)
