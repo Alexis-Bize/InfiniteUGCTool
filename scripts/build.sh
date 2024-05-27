@@ -84,5 +84,5 @@ do
 	fi
 
 	mkdir -p "./build/archive/"
-	zip -r "./build/archive/"$base_output_name".zip" "./build/bin/"$output_name
+	(cd "./build/bin" && zip -rj "../../build/archive/${base_output_name}.zip" "$output_name")
 done
