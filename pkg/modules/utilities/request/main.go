@@ -14,14 +14,25 @@
 
 package request
 
-import (
-	"fmt"
+import "strings"
 
-	"infinite-ugc-tool/configs"
-)
+func GetBaseHeaders(extraHeaders map[string]string) map[string]string {
+	headers := map[string]string{
+		"User-Agent": RequestUserAgent,
+		"Accept-Encoding": "identity",
+	}
 
-var RequestUserAgent = fmt.Sprintf(
-	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36 Edg/124.0.2478.109 (via %s/%s)",
-	configs.GetConfig().Name,
-	configs.GetConfig().Version,
-)
+	for k, v := range extraHeaders {
+		headers[k] = v
+	}
+
+	return headers
+}
+
+func ComputeUrl(baseUrl string, path string) string {
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
+
+	return baseUrl + path
+}

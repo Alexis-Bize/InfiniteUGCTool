@@ -12,16 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package request
+package msa_req
 
 import (
 	"fmt"
-
-	"infinite-ugc-tool/configs"
+	"net/url"
 )
 
-var RequestUserAgent = fmt.Sprintf(
-	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36 Edg/124.0.2478.109 (via %s/%s)",
-	configs.GetConfig().Name,
-	configs.GetConfig().Version,
-)
+func BuildAuthorizeUrl(clientId string, scope string, responseType string, redirectUri string, state string) string {
+	return fmt.Sprintf(
+		"https://login.live.com/oauth20_authorize.srf?client_id=%s&scope=%s&response_type=%s&redirect_uri=%s&state=%s&display=touch",
+		url.QueryEscape(clientId),
+		url.QueryEscape(scope),
+		url.QueryEscape(responseType),
+		url.QueryEscape(redirectUri),
+		url.QueryEscape(state),
+	)
+}
