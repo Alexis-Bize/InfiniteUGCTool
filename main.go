@@ -13,6 +13,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
+//go:generate goversioninfo -icon=assets/resource/icon.ico
 //go:embed config.txt
 var f embed.FS
 
