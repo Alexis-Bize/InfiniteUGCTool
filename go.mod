@@ -9,6 +9,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/robertkrimen/otto v0.4.0
 	github.com/tidwall/gjson v1.17.1
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (

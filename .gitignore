@@ -1,4 +1,7 @@
 .env
-builds/*
+build/*/*
+!build/*/.gitkeep
 .DS_Store
 .vscode
+resource.syso
+versioninfo.json

@@ -1,26 +1,22 @@
 package main
 
 import (
-	"embed"
 	"fmt"
-	"infinite-ugc-tool/internal"
-	prompt_svc "infinite-ugc-tool/internal/services/prompt"
-	"infinite-ugc-tool/internal/shared/modules/errors"
-	"infinite-ugc-tool/internal/shared/modules/helpers/release"
-	"infinite-ugc-tool/internal/shared/modules/utilities"
+	"infinite-ugc-tool/configs"
+	prompt_svc "infinite-ugc-tool/internal/application/services/prompt"
+	"infinite-ugc-tool/internal/helpers/release"
+	"infinite-ugc-tool/pkg/modules/errors"
+	"infinite-ugc-tool/pkg/modules/utilities"
 	"os"
 
 	"github.com/joho/godotenv"
 )
 
-//go:embed config.txt
-var f embed.FS
+//go:generate goversioninfo -icon=assets/resource/icon.ico
 
 func main() {
 	godotenv.Load()
-	internal.LoadConfig(f)
-
-	os.Stdout.WriteString(fmt.Sprintf("# %s (%s)\n", internal.GetConfig().Name, internal.GetConfig().Version))
+	os.Stdout.WriteString(fmt.Sprintf("# %s (%s)\n", configs.GetConfig().Name, configs.GetConfig().Version))
 
 	err := exec(false)
 	if err != nil {
@@ -37,7 +33,7 @@ func exec(isRetry bool) error {
 	if latestVersion != "" {
 		downloadLatestRelease, _ := prompt_svc.DisplayAskToUpdate(latestVersion)
 		if downloadLatestRelease {
-			return utilities.OpenBrowser(internal.GetConfig().GitHub + "/releases/latest")
+			return utilities.OpenBrowser(configs.GetConfig().Repository + "/releases/latest")
 		}
 	}
 
