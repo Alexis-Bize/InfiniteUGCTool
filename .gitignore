@@ -1,4 +1,6 @@
 .env
-builds/*
+build/*
 .DS_Store
 .vscode
+resource.syso
+versioninfo.json
