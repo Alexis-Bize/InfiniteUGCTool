@@ -2,8 +2,13 @@
 
 <p>
     <img alt="InfiniteUGCTool" title="InfiniteUGCTool" src="./assets/resource/darwin/icon_256x256.png" width="256" />
-    <br /><br />
-    <a href="https://github.com/Alexis-Bize/InfiniteUGCTool/releases"><img src="https://img.shields.io/github/release/charmbracelet/huh.svg" alt="Latest Release"></a>
+    <br />
+    <a href="https://github.com/Alexis-Bize/InfiniteUGCTool/releases">
+        <img src="https://img.shields.io/github/v/release/Alexis-Bize/InfiniteUGCTool?include_prereleases" alt="Latest Release">
+    </a>
+    <a href="https://www.apache.org/licenses/LICENSE-2.0">
+        <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="Apache 2.0">
+    </a>
 </p>
 
 An interactive CLI to bookmark, clone and manage **Halo Infinite** UGC files.
