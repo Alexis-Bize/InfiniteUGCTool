@@ -1,7 +1,5 @@
 # Infinite UGC Tool
 
-![image](/assets/resource/icon.ico?v=1)
-
 An interactive CLI to bookmark, clone and manage **Halo Infinite** UGC files.
 
 ![image](/assets/preview.gif?v=1)
