@@ -15,11 +15,21 @@
 package main
 
 import (
+	"flag"
+
 	"infinite-ugc-tool/internal"
+	"infinite-ugc-tool/pkg/modules/debug"
 )
 
 //go:generate goversioninfo -icon=assets/resource/windows/icon_256x256.ico
 
 func main() {
+	debugFlag := flag.Bool("debug", false, "dump auth-flow diagnostics to stderr and ~/InfiniteUGCTool/*.html when a step fails")
+	flag.Parse()
+
+	if *debugFlag {
+		debug.Enable()
+	}
+
 	internal.Exec()
 }

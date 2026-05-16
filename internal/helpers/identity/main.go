@@ -114,12 +114,11 @@ func loadIdentity() (Identity, error) {
 
 	decrypt, err := crypto.Decrypt(data, nil)
 	if err != nil {
-		return identity, err
+		return Identity{}, nil
 	}
 
-	err = json.Unmarshal(decrypt, &identity)
-	if err != nil {
-		return identity, errors.Format(err.Error(), errors.ErrInternal)
+	if err := json.Unmarshal(decrypt, &identity); err != nil {
+		return Identity{}, nil
 	}
 
 	return identity, nil

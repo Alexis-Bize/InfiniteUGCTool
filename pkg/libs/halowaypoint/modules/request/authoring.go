@@ -50,8 +50,7 @@ func Bookmark(xuid string, spartanToken string, category string, assetID string,
 		"X-343-Authorization-Spartan": spartanToken,
 	}) { req.Header.Set(k, v) }
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := request.Client.Do(req)
 	if err != nil {
 		return errors.Format(err.Error(), errors.ErrInternal)
 	}
@@ -80,8 +79,7 @@ func BookmarkFilmFromMatchID(xuid string, spartanToken string, matchID string) e
 		"X-343-Authorization-Spartan": spartanToken,
 	}) { req.Header.Set(k, v) }
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := request.Client.Do(req)
 	if err != nil {
 		return errors.Format(err.Error(), errors.ErrInternal)
 	}
@@ -125,8 +123,7 @@ func createSession(xuid string, spartanToken string, category string, assetID st
 		"X-343-Authorization-Spartan": spartanToken,
 	}) { req.Header.Set(k, v) }
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := request.Client.Do(req)
 	if err != nil {
 		return "", "", errors.Format(err.Error(), errors.ErrInternal)
 	}
@@ -174,8 +171,7 @@ func saveSession(xuid string, spartanToken string, category string, assetID stri
 		"X-343-Authorization-Spartan": spartanToken,
 	}) { req.Header.Set(k, v) }
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := request.Client.Do(req)
 	if err != nil {
 		return errors.Format(err.Error(), errors.ErrInternal)
 	}

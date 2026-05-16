@@ -15,11 +15,16 @@
 package prompt_svc
 
 import (
-	"infinite-ugc-tool/pkg/modules/errors"
+	"net/url"
 	"regexp"
 	"strings"
 
+	identity_svc "infinite-ugc-tool/internal/application/services/auth/identity"
+	"infinite-ugc-tool/internal/helpers/identity"
+	"infinite-ugc-tool/pkg/modules/errors"
+
 	"github.com/charmbracelet/huh"
+	"github.com/charmbracelet/huh/spinner"
 )
 
 const (
@@ -32,7 +37,6 @@ const (
 )
 
 const (
-	BUNDLE = "📦 Bundle (MapModePair)"
 	FILM = "🎬 Match (Film)"
 	MODE = "🎮 Mode (UgcGameVariant)"
 	MAP = "🌎 Map (MapVariant)"
@@ -45,11 +49,14 @@ const (
 	OPEN_GITHUB = "Source code: GitHub"
 )
 
+const uuidPattern = `[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`
+
+var uuidRegexp = regexp.MustCompile(uuidPattern)
+
 func displayMatchGrabPrompt() (string, error) {
 	var value string
-	var err error
 
-	err = huh.NewInput().
+	err := huh.NewInput().
 		Title("Please specify a match ID or a valid match URL").
 		Description("Leafapp.co, SpartanRecord.com, HaloDataHive.com and such are supported").
 		Value(&value).
@@ -59,12 +66,7 @@ func displayMatchGrabPrompt() (string, error) {
 		return "", errors.Format(err.Error(), errors.ErrPrompt)
 	}
 
-	matchID, err := extractUUID(value)
-	if err != nil {
-		return "", err
-	}
-
-	return matchID, nil
+	return extractMatchID(value)
 }
 
 func displayVariantDetailsPrompt() (string, string, error) {
@@ -74,7 +76,7 @@ func displayVariantDetailsPrompt() (string, string, error) {
 
 	err = huh.NewInput().
 		Title("Please specify a \"AssetID\" (GUID)").
-		Description("e.g., ae4daed6-251a-4c2f-bc6f-eb25eac1bfd").
+		Description("e.g., ae4daed6-251a-4c2f-bc6f-eb25eac1bfd0").
 		Value(&assetID).
 		Validate(func (input string) error {
 			_, err := extractUUID(input)
@@ -113,13 +115,54 @@ func displayVariantDetailsPrompt() (string, string, error) {
 }
 
 func extractUUID(value string) (string, error) {
-	const pattern = `[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`
-	re := regexp.MustCompile(pattern)
-	match := re.FindString(strings.TrimSpace(value))
-
+	match := uuidRegexp.FindString(strings.TrimSpace(value))
 	if match != "" {
 		return match, nil
 	}
 
 	return "", errors.Format("invalid format", errors.ErrUUIDInvalid)
+}
+
+// extractMatchID handles both raw GUIDs and URLs from common Halo tracker
+// sites. For URLs we prefer the last GUID in the path because match URLs
+// typically end with the match ID (e.g. /game/<guid>, /matches/<guid>).
+func extractMatchID(value string) (string, error) {
+	value = strings.TrimSpace(value)
+
+	if u, err := url.Parse(value); err == nil && u.Host != "" {
+		matches := uuidRegexp.FindAllString(u.Path, -1)
+		if len(matches) > 0 {
+			return matches[len(matches)-1], nil
+		}
+	}
+
+	return extractUUID(value)
+}
+
+// runWithSpinnerAndRefresh runs fn inside a spinner. If fn fails with
+// ErrSpartanTokenInvalid, the identity is refreshed *outside* the spinner —
+// refresh may prompt for 2FA, and the OTC prompt would corrupt the terminal
+// if it ran concurrently with a running spinner — and fn is retried once in
+// a fresh spinner. fn must read the latest token via *currentIdentity each
+// time it runs so the retry picks up the refreshed value.
+func runWithSpinnerAndRefresh(currentIdentity *identity.Identity, title string, fn func() error) error {
+	var err error
+	spinner.New().Title(title).Action(func() {
+		err = fn()
+	}).Run()
+
+	if err == nil || !errors.MayBe(err, errors.ErrSpartanTokenInvalid) {
+		return err
+	}
+
+	refreshed, refreshErr := identity_svc.ForceRefresh()
+	if refreshErr != nil {
+		return err
+	}
+	*currentIdentity = refreshed
+
+	spinner.New().Title(title).Action(func() {
+		err = fn()
+	}).Run()
+	return err
 }

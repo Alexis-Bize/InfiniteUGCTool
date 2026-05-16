@@ -15,6 +15,8 @@
 package prompt_svc
 
 import (
+	"os"
+
 	"infinite-ugc-tool/configs"
 	"infinite-ugc-tool/internal/helpers/identity"
 	"infinite-ugc-tool/pkg/modules/errors"
@@ -25,63 +27,91 @@ import (
 )
 
 func DisplayBaseOptions() error {
-	var option string
-	err := huh.NewSelect[string]().
-		Title("What would like to do today?").
-		Options(
-			huh.NewOption(BOOKMARK_FILES, BOOKMARK_FILES),
-			huh.NewOption(CLONE_FILES, CLONE_FILES),
-			huh.NewOption(SHOW_CREDITS, SHOW_CREDITS),
-			huh.NewOption(SIGN_OUT, SIGN_OUT),
-			huh.NewOption(EXIT, EXIT),
-		).Value(&option).Run()
+	for {
+		var option string
+		err := huh.NewSelect[string]().
+			Title("What would like to do today?").
+			Options(
+				huh.NewOption(BOOKMARK_FILES, BOOKMARK_FILES),
+				huh.NewOption(CLONE_FILES, CLONE_FILES),
+				huh.NewOption(SHOW_CREDITS, SHOW_CREDITS),
+				huh.NewOption(SIGN_OUT, SIGN_OUT),
+				huh.NewOption(EXIT, EXIT),
+			).Value(&option).Run()
 
-	if err != nil {
-		return errors.Format(err.Error(), errors.ErrPrompt)
-	}
-
-	if option == SHOW_CREDITS {
-		return DisplayCredits()
-	} else if option == BOOKMARK_FILES {
-		return DisplayBookmarkOptions()
-	} else if option == CLONE_FILES {
-		return DisplayCloneOptions()
-	} else if option == SIGN_OUT {
-		var confirm bool
-		huh.NewConfirm().
-			Title("Are you sure?").
-			Affirmative("Yes!").
-			Negative("Oops, nevermind.").
-			Value(&confirm).
-			Run()
-
-		if confirm {
-			spinner.New().Title("Signing out...").Run()
-			identity.SaveIdentity(identity.Identity{})
-			return nil
+		if err != nil {
+			return errors.Format(err.Error(), errors.ErrPrompt)
 		}
 
-		return DisplayBaseOptions()
+		switch option {
+		case BOOKMARK_FILES:
+			if err := DisplayBookmarkOptions(); err != nil {
+				return err
+			}
+		case CLONE_FILES:
+			if err := DisplayCloneOptions(); err != nil {
+				return err
+			}
+		case SHOW_CREDITS:
+			if err := DisplayCredits(); err != nil {
+				return err
+			}
+		case SIGN_OUT:
+			done, err := handleSignOut()
+			if err != nil {
+				return err
+			}
+			if done {
+				return nil
+			}
+		case EXIT:
+			return nil
+		}
+	}
+}
+
+func handleSignOut() (bool, error) {
+	var confirm bool
+	huh.NewConfirm().
+		Title("Are you sure?").
+		Affirmative("Yes!").
+		Negative("Oops, nevermind.").
+		Value(&confirm).
+		Run()
+
+	if !confirm {
+		return false, nil
 	}
 
-	return nil
+	var saveErr error
+	spinner.New().Title("Signing out...").Action(func() {
+		saveErr = identity.SaveIdentity(identity.Identity{})
+	}).Run()
+
+	if saveErr != nil {
+		os.Stdout.WriteString("❌ Failed to sign out...\n")
+		return false, saveErr
+	}
+
+	return true, nil
 }
 
 func DisplayCredits() error {
-	var option string
-	err := huh.NewSelect[string]().Title("Credits:").Options(
-		huh.NewOption(OPEN_X_1, OPEN_X_1),
-		huh.NewOption(OPEN_X_2, OPEN_X_2),
-		huh.NewOption(OPEN_X_3, OPEN_X_3),
-		huh.NewOption(OPEN_GITHUB, OPEN_GITHUB),
-		huh.NewOption(GO_BACK, GO_BACK),
-	).Value(&option).Run()
+	for {
+		var option string
+		err := huh.NewSelect[string]().Title("Credits:").Options(
+			huh.NewOption(OPEN_X_1, OPEN_X_1),
+			huh.NewOption(OPEN_X_2, OPEN_X_2),
+			huh.NewOption(OPEN_X_3, OPEN_X_3),
+			huh.NewOption(OPEN_GITHUB, OPEN_GITHUB),
+			huh.NewOption(GO_BACK, GO_BACK),
+		).Value(&option).Run()
 
-	if err != nil || option == GO_BACK {
-		return DisplayBaseOptions()
-	}
+		if err != nil || option == GO_BACK {
+			return nil
+		}
 
-	switch option {
+		switch option {
 		case OPEN_X_1:
 			utilities.OpenBrowser("https://x.com/zeny_ic")
 		case OPEN_X_2:
@@ -90,9 +120,8 @@ func DisplayCredits() error {
 			utilities.OpenBrowser("https://x.com/gruntdotapi")
 		case OPEN_GITHUB:
 			utilities.OpenBrowser(configs.GetConfig().Repository)
+		}
 	}
-
-	return DisplayBaseOptions()
 }
 
 func DisplayRetryAuth() bool {

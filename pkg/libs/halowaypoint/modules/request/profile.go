@@ -36,8 +36,7 @@ func GetUserProfile(spartanToken string) (halowaypoint.UserProfileResponse, erro
 		"X-343-Authorization-Spartan": spartanToken,
 	}) { req.Header.Set(k, v) }
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := request.Client.Do(req)
 	if err != nil {
 		return halowaypoint.UserProfileResponse{}, errors.Format(err.Error(), errors.ErrInternal)
 	}

@@ -20,215 +20,193 @@ import (
 	"strings"
 
 	identity_svc "infinite-ugc-tool/internal/application/services/auth/identity"
+	"infinite-ugc-tool/internal/helpers/identity"
+	"infinite-ugc-tool/pkg/libs/halowaypoint"
 	halowaypoint_req "infinite-ugc-tool/pkg/libs/halowaypoint/modules/request"
 	"infinite-ugc-tool/pkg/modules/errors"
 
 	"github.com/charmbracelet/huh"
-	"github.com/charmbracelet/huh/spinner"
 )
 
 func DisplayBookmarkOptions() error {
-	var option string
-	err := huh.NewSelect[string]().
-		Title("🔖 What would like to bookmark?").
-		Options(
-			huh.NewOption(MAP, MAP),
-			huh.NewOption(MODE, MODE),
-			huh.NewOption(FILM, FILM),
-			huh.NewOption(GO_BACK, GO_BACK),
-		).Value(&option).Run()
+	for {
+		var option string
+		err := huh.NewSelect[string]().
+			Title("🔖 What would like to bookmark?").
+			Options(
+				huh.NewOption(MAP, MAP),
+				huh.NewOption(MODE, MODE),
+				huh.NewOption(FILM, FILM),
+				huh.NewOption(GO_BACK, GO_BACK),
+			).Value(&option).Run()
 
-	if err != nil || option == GO_BACK {
-		return DisplayBaseOptions()
-	}
-
-	currentIdentity, err := identity_svc.GetActiveIdentity()
-	if err != nil {
-		return err
-	}
-
-	if option == FILM {
-		matchID, err := displayMatchGrabPrompt()
-		if err != nil {
-			if !errors.MayBe(err, errors.ErrPrompt) {
-				os.Stdout.WriteString("❌ Invalid input...\n")
-			}
-
-			return DisplayBookmarkOptions()
-		}
-
-		spinner.New().Title("Fetching...").Run()
-
-		stats, err := halowaypoint_req.GetMatchStats(currentIdentity.SpartanToken.Value, matchID)
-		if err != nil {
-			os.Stdout.WriteString("❌ Invalid match ID...\n")
-			return DisplayBookmarkOptions()
-		}
-
-		film, err := halowaypoint_req.GetMatchFilm(currentIdentity.SpartanToken.Value, matchID)
-		if err != nil {
-			os.Stdout.WriteString("❌ Film not available...\n")
-			return DisplayBookmarkOptions()
-		}
-
-		os.Stdout.WriteString(strings.Join([]string{
-			fmt.Sprintf("Match Details (ID: %s)", stats.MatchID),
-			"│ Film",
-			fmt.Sprintf("└── Asset ID: %s", film.AssetID),
-			"",
-		}, "\n"))
-
-		return bookmarkAsset(
-			currentIdentity.XboxNetwork.Xuid,
-			currentIdentity.SpartanToken.Value,
-			"films",
-			film.AssetID,
-			"",
-		)
-	}
-
-	if option == MAP || option == MODE {
-		var askForAssets bool
-		err := huh.NewConfirm().
-			Title("🔖 Would you like to bookmark the asset from an existing match?").
-			Affirmative("No, I know what I'm doing.").
-			Negative("Yes please!").
-			Value(&askForAssets).
-			Run()
-
-		if err != nil {
-			return DisplayBookmarkOptions()
-		}
-
-		if askForAssets {
-			assetID, assetVersionID, err := displayVariantDetailsPrompt()
-			if err != nil {
-				if !errors.MayBe(err, errors.ErrPrompt) {
-					os.Stdout.WriteString("❌ Invalid input...\n")
-				}
-
-				return DisplayBookmarkOptions()
-			}
-
-			if option == MAP {
-				return bookmarkAsset(
-					currentIdentity.XboxNetwork.Xuid,
-					currentIdentity.SpartanToken.Value,
-					"maps",
-					assetID,
-					assetVersionID,
-				)
-			} else if option == MODE {
-				return bookmarkAsset(
-					currentIdentity.XboxNetwork.Xuid,
-					currentIdentity.SpartanToken.Value,
-					"ugcgamevariants",
-					assetID,
-					assetVersionID,
-				)
-			}
-
+		if err != nil || option == GO_BACK {
 			return nil
 		}
 
-		matchID, err := displayMatchGrabPrompt()
+		currentIdentity, err := identity_svc.GetActiveIdentity()
+		if err != nil {
+			return err
+		}
+
+		switch option {
+		case FILM:
+			handleFilmBookmark(&currentIdentity)
+		case MAP:
+			handleAssetBookmark(&currentIdentity, MAP, "maps")
+		case MODE:
+			handleAssetBookmark(&currentIdentity, MODE, "ugcgamevariants")
+		}
+	}
+}
+
+func handleFilmBookmark(currentIdentity *identity.Identity) {
+	matchID, err := displayMatchGrabPrompt()
+	if err != nil {
+		if !errors.MayBe(err, errors.ErrPrompt) {
+			os.Stdout.WriteString("❌ Invalid input...\n")
+		}
+		return
+	}
+
+	var stats halowaypoint.MatchStatsResponse
+	var film halowaypoint.MatchSpectateResponse
+	var statsErr, filmErr error
+
+	runWithSpinnerAndRefresh(currentIdentity, "Fetching...", func() error {
+		stats, statsErr = halowaypoint_req.GetMatchStats(currentIdentity.SpartanToken.Value, matchID)
+		if statsErr != nil {
+			return statsErr
+		}
+		film, filmErr = halowaypoint_req.GetMatchFilm(currentIdentity.SpartanToken.Value, matchID)
+		return filmErr
+	})
+
+	if statsErr != nil {
+		os.Stdout.WriteString("❌ Invalid match ID...\n")
+		return
+	}
+	if filmErr != nil {
+		os.Stdout.WriteString("❌ Film not available...\n")
+		return
+	}
+
+	os.Stdout.WriteString(strings.Join([]string{
+		fmt.Sprintf("Match Details (ID: %s)", stats.MatchID),
+		"│ Film",
+		fmt.Sprintf("└── Asset ID: %s", film.AssetID),
+		"",
+	}, "\n"))
+
+	bookmarkAsset(currentIdentity, "films", film.AssetID, "")
+}
+
+func handleAssetBookmark(currentIdentity *identity.Identity, option string, category string) {
+	var manualEntry bool
+	err := huh.NewConfirm().
+		Title("🔖 Would you like to bookmark the asset from an existing match?").
+		Affirmative("No, I know what I'm doing.").
+		Negative("Yes please!").
+		Value(&manualEntry).
+		Run()
+
+	if err != nil {
+		return
+	}
+
+	if manualEntry {
+		assetID, assetVersionID, err := displayVariantDetailsPrompt()
 		if err != nil {
 			if !errors.MayBe(err, errors.ErrPrompt) {
 				os.Stdout.WriteString("❌ Invalid input...\n")
 			}
-
-			return DisplayBookmarkOptions()
+			return
 		}
-
-		spinner.New().Title("Fetching...").Run()
-
-		stats, err := halowaypoint_req.GetMatchStats(currentIdentity.SpartanToken.Value, matchID)
-		if err != nil {
-			os.Stdout.WriteString("❌ Invalid match ID...\n")
-			return DisplayBookmarkOptions()
-		}
-
-		if option == MAP {
-			os.Stdout.WriteString(strings.Join([]string{
-				fmt.Sprintf("Match Details (ID: %s)", stats.MatchID),
-				"│ MapVariant",
-				fmt.Sprintf("├── Asset ID: %s", stats.MatchInfo.MapVariant.AssetID),
-				fmt.Sprintf("└── Version ID: %s", stats.MatchInfo.MapVariant.VersionID),
-				"",
-			}, "\n"))
-
-			return bookmarkAsset(
-				currentIdentity.XboxNetwork.Xuid,
-				currentIdentity.SpartanToken.Value,
-				"maps",
-				stats.MatchInfo.MapVariant.AssetID,
-				stats.MatchInfo.MapVariant.VersionID,
-			)
-		} else if option == MODE {
-			os.Stdout.WriteString(strings.Join([]string{
-				fmt.Sprintf("Match Details (ID: %s)", stats.MatchID),
-				"│ UgcGameVariant",
-				fmt.Sprintf("├── Asset ID: %s", stats.MatchInfo.UgcGameVariant.AssetID),
-				fmt.Sprintf("└── Version ID: %s", stats.MatchInfo.UgcGameVariant.VersionID),
-				"",
-			}, "\n"))
-
-			return bookmarkAsset(
-				currentIdentity.XboxNetwork.Xuid,
-				currentIdentity.SpartanToken.Value,
-				"ugcgamevariants",
-				stats.MatchInfo.UgcGameVariant.AssetID,
-				stats.MatchInfo.UgcGameVariant.VersionID,
-			)
-		}
+		bookmarkAsset(currentIdentity, category, assetID, assetVersionID)
+		return
 	}
 
-	return DisplayBookmarkOptions()
+	matchID, err := displayMatchGrabPrompt()
+	if err != nil {
+		if !errors.MayBe(err, errors.ErrPrompt) {
+			os.Stdout.WriteString("❌ Invalid input...\n")
+		}
+		return
+	}
+
+	var stats halowaypoint.MatchStatsResponse
+	statsErr := runWithSpinnerAndRefresh(currentIdentity, "Fetching...", func() error {
+		var err error
+		stats, err = halowaypoint_req.GetMatchStats(currentIdentity.SpartanToken.Value, matchID)
+		return err
+	})
+
+	if statsErr != nil {
+		os.Stdout.WriteString("❌ Invalid match ID...\n")
+		return
+	}
+
+	var label, assetID, versionID string
+	switch option {
+	case MAP:
+		label = "MapVariant"
+		assetID = stats.MatchInfo.MapVariant.AssetID
+		versionID = stats.MatchInfo.MapVariant.VersionID
+	case MODE:
+		label = "UgcGameVariant"
+		assetID = stats.MatchInfo.UgcGameVariant.AssetID
+		versionID = stats.MatchInfo.UgcGameVariant.VersionID
+	}
+
+	os.Stdout.WriteString(strings.Join([]string{
+		fmt.Sprintf("Match Details (ID: %s)", stats.MatchID),
+		"│ " + label,
+		fmt.Sprintf("├── Asset ID: %s", assetID),
+		fmt.Sprintf("└── Version ID: %s", versionID),
+		"",
+	}, "\n"))
+
+	bookmarkAsset(currentIdentity, category, assetID, versionID)
 }
 
-func displayAssetCloneFallbackOptions(xuid string, spartanToken string, category string, assetID string, assetVersionID string) error {
-	var ignoreCloning bool
+func bookmarkAsset(currentIdentity *identity.Identity, category string, assetID string, assetVersionID string) {
+	err := runWithSpinnerAndRefresh(currentIdentity, "Bookmarking...", func() error {
+		if category != "films" {
+			if pingErr := halowaypoint_req.PingPublishedAsset(currentIdentity.SpartanToken.Value, category, assetID); pingErr != nil {
+				return pingErr
+			}
+		}
+		return halowaypoint_req.Bookmark(currentIdentity.XboxNetwork.Xuid, currentIdentity.SpartanToken.Value, category, assetID, assetVersionID)
+	})
+
+	if err != nil {
+		if errors.MayBe(err, errors.ErrNotFound) {
+			if assetVersionID != "" {
+				displayAssetCloneFallbackOptions(currentIdentity, category, assetID, assetVersionID)
+				return
+			}
+			os.Stdout.WriteString("❌ Failed to bookmark the desired file...\n")
+			return
+		}
+		os.Stdout.WriteString("❌ Something went wrong...\n")
+		return
+	}
+
+	os.Stdout.WriteString("🎉 Bookmarked with success!\n")
+}
+
+func displayAssetCloneFallbackOptions(currentIdentity *identity.Identity, category string, assetID string, assetVersionID string) {
+	var skipCloning bool
 	err := huh.NewConfirm().
 		Title("The desired asset is not published; would you like to try cloning it in your files instead?").
 		Affirmative("No, that's ok.").
 		Negative("Yes please!").
-		Value(&ignoreCloning).
+		Value(&skipCloning).
 		Run()
 
-	if err != nil || ignoreCloning {
-		return DisplayBookmarkOptions()
+	if err != nil || skipCloning {
+		return
 	}
 
-	return cloneAsset(xuid, spartanToken, category, assetID, assetVersionID)
-}
-
-func bookmarkAsset(xuid string, spartanToken string, category string, assetID string, assetVersionID string) error {
-	var err error
-	spinner.New().Title("Bookmarking...").Run()
-
-	if category != "films" {
-		err = halowaypoint_req.PingPublishedAsset(spartanToken, category, assetID)
-		if err != nil {
-			if errors.MayBe(err, errors.ErrNotFound) {
-				if assetVersionID != "" {
-					return displayAssetCloneFallbackOptions(xuid, spartanToken, category, assetID, assetVersionID)
-				}
-
-				os.Stdout.WriteString("❌ Failed to bookmark the desired file...\n")
-				return DisplayBookmarkOptions()
-			}
-
-			os.Stdout.WriteString("❌ Something went wrong...\n")
-			return DisplayBookmarkOptions()
-		}
-	}
-
-	err = halowaypoint_req.Bookmark(xuid, spartanToken, category, assetID, assetVersionID)
-	if err != nil {
-		os.Stdout.WriteString("❌ Something went wrong...\n")
-		return DisplayBookmarkOptions()
-	}
-
-	os.Stdout.WriteString("🎉 Bookmarked with success!\n")
-	return DisplayBookmarkOptions()
+	cloneAsset(currentIdentity, category, assetID, assetVersionID)
 }

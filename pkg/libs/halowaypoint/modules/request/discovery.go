@@ -38,8 +38,7 @@ func GetMatchFilm(spartanToken string, matchID string) (halowaypoint.MatchSpecta
 		"X-343-Authorization-Spartan": spartanToken,
 	}) { req.Header.Set(k, v) }
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := request.Client.Do(req)
 	if err != nil {
 		return halowaypoint.MatchSpectateResponse{}, errors.Format(err.Error(), errors.ErrInternal)
 	}
@@ -75,8 +74,7 @@ func PingPublishedAsset(spartanToken string, category string, assetID string) er
 		"X-343-Authorization-Spartan": spartanToken,
 	}) { req.Header.Set(k, v) }
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := request.Client.Do(req)
 	if err != nil {
 		return errors.Format(err.Error(), errors.ErrInternal)
 	}

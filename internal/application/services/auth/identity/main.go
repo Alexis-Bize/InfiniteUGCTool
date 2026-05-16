@@ -42,6 +42,18 @@ func GetActiveIdentity() (identity.Identity, error) {
 	return currentIdentity, nil
 }
 
+func ForceRefresh() (identity.Identity, error) {
+	currentIdentity, err := identity.GetOrCreateIdentity(identity.Identity{})
+	if err != nil {
+		return identity.Identity{}, err
+	} else if (currentIdentity == (identity.Identity{})) {
+		return identity.Identity{}, errors.Format("empty identity", errors.ErrIdentityMissing)
+	}
+
+	currentIdentity.SpartanToken.Expiration = ""
+	return RefreshIdentityIfRequired(currentIdentity)
+}
+
 func RefreshIdentityIfRequired(currentIdentity identity.Identity) (identity.Identity, error) {
 	shouldRefresh := true
 

@@ -16,142 +16,124 @@ package prompt_svc
 
 import (
 	"fmt"
-	identity_svc "infinite-ugc-tool/internal/application/services/auth/identity"
-	halowaypoint_req "infinite-ugc-tool/pkg/libs/halowaypoint/modules/request"
-	"infinite-ugc-tool/pkg/modules/errors"
 	"os"
 	"strings"
 
+	identity_svc "infinite-ugc-tool/internal/application/services/auth/identity"
+	"infinite-ugc-tool/internal/helpers/identity"
+	"infinite-ugc-tool/pkg/libs/halowaypoint"
+	halowaypoint_req "infinite-ugc-tool/pkg/libs/halowaypoint/modules/request"
+	"infinite-ugc-tool/pkg/modules/errors"
+
 	"github.com/charmbracelet/huh"
-	"github.com/charmbracelet/huh/spinner"
 )
 
 func DisplayCloneOptions() error {
-	var option string
-	err := huh.NewSelect[string]().
-		Title("🔄 What would like to clone?").
-		Options(
-			huh.NewOption(MAP, MAP),
-			huh.NewOption(MODE, MODE),
-			huh.NewOption(GO_BACK, GO_BACK),
-		).Value(&option).Run()
+	for {
+		var option string
+		err := huh.NewSelect[string]().
+			Title("🔄 What would like to clone?").
+			Options(
+				huh.NewOption(MAP, MAP),
+				huh.NewOption(MODE, MODE),
+				huh.NewOption(GO_BACK, GO_BACK),
+			).Value(&option).Run()
 
-	if err != nil || option == GO_BACK {
-		return DisplayBaseOptions()
-	}
+		if err != nil || option == GO_BACK {
+			return nil
+		}
 
-	currentIdentity, err := identity_svc.GetActiveIdentity()
-	if err != nil {
-		return err
-	}
-
-	if option == MAP || option == MODE {
-		var askForAssets bool
-		err := huh.NewConfirm().
-			Title("🔄 Would you like to clone the asset from an existing match?").
-			Affirmative("No, I know what I'm doing.").
-			Negative("Yes please!").
-			Value(&askForAssets).
-			Run()
-
+		currentIdentity, err := identity_svc.GetActiveIdentity()
 		if err != nil {
-			return DisplayCloneOptions()
+			return err
 		}
 
-		if askForAssets {
-			assetID, assetVersionID, err := displayVariantDetailsPrompt()
-			if err != nil {
-				if !errors.MayBe(err, errors.ErrPrompt) {
-					os.Stdout.WriteString("❌ Invalid input...\n")
-				}
-
-				return DisplayCloneOptions()
-			}
-
-			if option == MAP {
-				return cloneAsset(
-					currentIdentity.XboxNetwork.Xuid,
-					currentIdentity.SpartanToken.Value,
-					"maps",
-					assetID,
-					assetVersionID,
-				)
-			} else if option == MODE {
-				return cloneAsset(
-					currentIdentity.XboxNetwork.Xuid,
-					currentIdentity.SpartanToken.Value,
-					"ugcgamevariants",
-					assetID,
-					assetVersionID,
-				)
-			}
-
-			return DisplayCloneOptions()
+		switch option {
+		case MAP:
+			handleAssetClone(&currentIdentity, MAP, "maps")
+		case MODE:
+			handleAssetClone(&currentIdentity, MODE, "ugcgamevariants")
 		}
+	}
+}
 
-		matchID, err := displayMatchGrabPrompt()
+func handleAssetClone(currentIdentity *identity.Identity, option string, category string) {
+	var manualEntry bool
+	err := huh.NewConfirm().
+		Title("🔄 Would you like to clone the asset from an existing match?").
+		Affirmative("No, I know what I'm doing.").
+		Negative("Yes please!").
+		Value(&manualEntry).
+		Run()
+
+	if err != nil {
+		return
+	}
+
+	if manualEntry {
+		assetID, assetVersionID, err := displayVariantDetailsPrompt()
 		if err != nil {
 			if !errors.MayBe(err, errors.ErrPrompt) {
 				os.Stdout.WriteString("❌ Invalid input...\n")
 			}
-
-			return DisplayCloneOptions()
+			return
 		}
-
-		spinner.New().Title("Fetching...").Run()
-
-		stats, err := halowaypoint_req.GetMatchStats(currentIdentity.SpartanToken.Value, matchID)
-		if err != nil {
-			os.Stdout.WriteString("❌ Invalid match ID...\n")
-			return DisplayCloneOptions()
-		}
-
-		if option == MAP {
-			os.Stdout.WriteString(strings.Join([]string{
-				fmt.Sprintf("Match Details (ID: %s)", stats.MatchID),
-				"│ MapVariant",
-				fmt.Sprintf("├── Asset ID: %s", stats.MatchInfo.MapVariant.AssetID),
-				fmt.Sprintf("└── Version ID: %s", stats.MatchInfo.MapVariant.VersionID),
-				"",
-			}, "\n"))
-
-			return cloneAsset(
-				currentIdentity.XboxNetwork.Xuid,
-				currentIdentity.SpartanToken.Value,
-				"maps",
-				stats.MatchInfo.MapVariant.AssetID,
-				stats.MatchInfo.MapVariant.VersionID,
-			)
-		} else if option == MODE {
-			os.Stdout.WriteString(strings.Join([]string{
-				fmt.Sprintf("Match Details (ID: %s)", stats.MatchID),
-				"│ UgcGameVariant",
-				fmt.Sprintf("├── Asset ID: %s", stats.MatchInfo.UgcGameVariant.AssetID),
-				fmt.Sprintf("└── Version ID: %s", stats.MatchInfo.UgcGameVariant.VersionID),
-				"",
-			}, "\n"))
-
-			return cloneAsset(
-				currentIdentity.XboxNetwork.Xuid,
-				currentIdentity.SpartanToken.Value,
-				"ugcgamevariants",
-				stats.MatchInfo.UgcGameVariant.AssetID,
-				stats.MatchInfo.UgcGameVariant.VersionID,
-			)
-		}
+		cloneAsset(currentIdentity, category, assetID, assetVersionID)
+		return
 	}
 
-	return DisplayCloneOptions()
+	matchID, err := displayMatchGrabPrompt()
+	if err != nil {
+		if !errors.MayBe(err, errors.ErrPrompt) {
+			os.Stdout.WriteString("❌ Invalid input...\n")
+		}
+		return
+	}
+
+	var stats halowaypoint.MatchStatsResponse
+	statsErr := runWithSpinnerAndRefresh(currentIdentity, "Fetching...", func() error {
+		var err error
+		stats, err = halowaypoint_req.GetMatchStats(currentIdentity.SpartanToken.Value, matchID)
+		return err
+	})
+
+	if statsErr != nil {
+		os.Stdout.WriteString("❌ Invalid match ID...\n")
+		return
+	}
+
+	var label, assetID, versionID string
+	switch option {
+	case MAP:
+		label = "MapVariant"
+		assetID = stats.MatchInfo.MapVariant.AssetID
+		versionID = stats.MatchInfo.MapVariant.VersionID
+	case MODE:
+		label = "UgcGameVariant"
+		assetID = stats.MatchInfo.UgcGameVariant.AssetID
+		versionID = stats.MatchInfo.UgcGameVariant.VersionID
+	}
+
+	os.Stdout.WriteString(strings.Join([]string{
+		fmt.Sprintf("Match Details (ID: %s)", stats.MatchID),
+		"│ " + label,
+		fmt.Sprintf("├── Asset ID: %s", assetID),
+		fmt.Sprintf("└── Version ID: %s", versionID),
+		"",
+	}, "\n"))
+
+	cloneAsset(currentIdentity, category, assetID, versionID)
 }
 
-func cloneAsset(xuid string, spartanToken string, category string, assetID string, assetVersionID string) error {
-	spinner.New().Title("Cloning...").Run()
-	err := halowaypoint_req.CloneAsset(xuid, spartanToken, category, assetID, assetVersionID)
+func cloneAsset(currentIdentity *identity.Identity, category string, assetID string, assetVersionID string) {
+	err := runWithSpinnerAndRefresh(currentIdentity, "Cloning...", func() error {
+		return halowaypoint_req.CloneAsset(currentIdentity.XboxNetwork.Xuid, currentIdentity.SpartanToken.Value, category, assetID, assetVersionID)
+	})
+
 	if err != nil {
 		os.Stdout.WriteString("❌ Failed to clone the desired file...\n")
-		return DisplayCloneOptions()
+		return
 	}
 
 	os.Stdout.WriteString("🎉 Cloned with success!\n")
-	return DisplayCloneOptions()
 }

@@ -34,28 +34,39 @@ type Release struct {
 type Releases []Release
 
 func CheckForUpdates() (string, error) {
-	spinner.New().Title("Checking for updates...").Run()
-
 	owner, repo := extractOwnerAndRepo()
 	if owner == "" || repo == "" {
 		return "", errors.Format("something went wrong", errors.ErrInternal)
 	}
 
 	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/releases", owner, repo)
-	resp, err := http.Get(url)
-	if err != nil {
-		return "", errors.Format(err.Error(), errors.ErrInternal)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", errors.Format("something went wrong", errors.ErrInternal)
-	}
 
 	var releases Releases
-	err = json.NewDecoder(resp.Body).Decode(&releases)
-	if err != nil {
-		return "", errors.Format(err.Error(), errors.ErrInternal)
+	var fetchErr error
+	spinner.New().Title("Checking for updates...").Action(func() {
+		resp, err := http.Get(url)
+		if err != nil {
+			fetchErr = errors.Format(err.Error(), errors.ErrInternal)
+			return
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			fetchErr = errors.Format("something went wrong", errors.ErrInternal)
+			return
+		}
+
+		if err := json.NewDecoder(resp.Body).Decode(&releases); err != nil {
+			fetchErr = errors.Format(err.Error(), errors.ErrInternal)
+		}
+	}).Run()
+
+	if fetchErr != nil {
+		return "", fetchErr
+	}
+
+	if len(releases) == 0 {
+		return "", nil
 	}
 
 	latestRelease := releases[0]
