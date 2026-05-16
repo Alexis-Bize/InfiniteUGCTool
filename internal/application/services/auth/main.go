@@ -23,23 +23,37 @@ import (
 )
 
 func AuthenticateWithCredentials(email string, password string) (halowaypoint.UserProfileResponse, string, error) {
-	resp, err := msa_req.Authenticate(msa.LiveCredentials{
-		Email: email,
-		Password: password,
-	}, msa.LiveClientAuthOptions{
-		ClientID: "000000004C0BD2F1",
-		Scope: "xboxlive.signin xboxlive.offline_access",
-		ResponseType: "code",
-		RedirectURI: "https://www.halowaypoint.com/sign-in/callback",
-		State: "/",
-	})
-
+	// 1. Ask halowaypoint where to authenticate. The returned URL points
+	//    at login.microsoftonline.com / v2.0 with halowaypoint's own
+	//    client_id, scope, and redirect_uri baked in — none of which we
+	//    can safely hardcode.
+	authorizeURL, err := halowaypoint_req.GetSignInAuthorizeURL()
 	if err != nil {
 		return halowaypoint.UserProfileResponse{}, "", err
 	}
 
-	location := resp.Header.Get("Location")
+	// 2. Fetch the resulting authorize page. MS internally redirects this
+	//    to the legacy login.live.com form, which is what we then scrape
+	//    for PPFT / urlPost and which sets the session cookies we need on
+	//    the credentials POST.
+	page, err := msa_req.GetAuthorizePage(authorizeURL)
+	if err != nil {
+		return halowaypoint.UserProfileResponse{}, "", err
+	}
 
+	// 3. POST credentials against the form discovered in the page (and
+	//    drive the 2FA flow if MS asks for it).
+	resp, err := msa_req.Authenticate(msa.LiveCredentials{
+		Email:    email,
+		Password: password,
+	}, page)
+	if err != nil {
+		return halowaypoint.UserProfileResponse{}, "", err
+	}
+
+	// 4. Follow MS's callback to halowaypoint to swap the auth code for
+	//    a Spartan token.
+	location := resp.Header.Get("Location")
 	if location == "" {
 		return halowaypoint.UserProfileResponse{}, "", errors.Format("something went wrong", errors.ErrInternal)
 	}

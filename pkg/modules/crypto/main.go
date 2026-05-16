@@ -18,14 +18,13 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"crypto/sha256"
 	"io"
 	"os"
 	"runtime"
 
 	"infinite-ugc-tool/pkg/modules/errors"
 )
-
-const keyLength = 32
 
 func Encrypt(plaintext []byte, key []byte) ([]byte, error) {
 	if len(key) == 0 {
@@ -72,22 +71,17 @@ func Decrypt(ciphertext []byte, key []byte) ([]byte, error) {
 	return ciphertext, nil
 }
 
-// security 1:1, more for user's convenience
+// getLocalKey derives a 32-byte AES key from the machine's hostname. Hashing
+// (rather than the previous zero-padded truncation) guarantees full key-length
+// entropy regardless of how short the hostname happens to be. This is still
+// "security 1:1" — anyone with the user's hostname and the file can recover
+// the contents — but it's strictly better than the prior scheme.
 func getLocalKey() []byte {
 	hostname, err := os.Hostname()
 	if err != nil {
-		return fixKeyLength([]byte(runtime.GOOS))
+		hostname = runtime.GOOS
 	}
 
-	return fixKeyLength([]byte(hostname))
-}
-
-func fixKeyLength(key []byte) []byte {
-	if len(key) >= keyLength {
-		return key[:keyLength]
-	}
-
-	paddedKey := make([]byte, keyLength)
-	copy(paddedKey, key)
-	return paddedKey
+	sum := sha256.Sum256([]byte(hostname))
+	return sum[:]
 }

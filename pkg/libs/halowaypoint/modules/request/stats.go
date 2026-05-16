@@ -38,8 +38,7 @@ func GetMatchStats(spartanToken string, matchID string) (halowaypoint.MatchStats
 		"X-343-Authorization-Spartan": spartanToken,
 	}) { req.Header.Set(k, v) }
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := request.Client.Do(req)
 	if err != nil {
 		return halowaypoint.MatchStatsResponse{}, errors.Format(err.Error(), errors.ErrInternal)
 	}

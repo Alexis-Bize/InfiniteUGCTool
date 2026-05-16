@@ -15,9 +15,16 @@
 package halowaypoint_req
 
 import (
+	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
+	"strings"
 
+	"infinite-ugc-tool/configs"
+	"infinite-ugc-tool/pkg/modules/debug"
 	"infinite-ugc-tool/pkg/modules/errors"
 	"infinite-ugc-tool/pkg/modules/utilities/request"
 )
@@ -32,13 +39,7 @@ func ExtractSpartanTokenPostCallback(location string) (string, error) {
 		"Accept": "*/*",
 	}) { req.Header.Set(k, v) }
 
-	client := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
-
-	resp, err := client.Do(req)
+	resp, err := request.NoRedirectClient.Do(req)
 	if err != nil {
 		return "", errors.Format(err.Error(), errors.ErrInternal)
 	}
@@ -52,6 +53,7 @@ func ExtractSpartanTokenPostCallback(location string) (string, error) {
 		if cookie.Name == tokenName {
 			tokenValue, err = url.QueryUnescape(cookie.Value)
 			if err != nil {
+				dumpSpartanTokenDebug(location, resp, cookies, "cookie value failed to URL-unescape")
 				return "", errors.Format("please retry in a few seconds", errors.ErrSpartanTokenGrabFailure)
 			}
 
@@ -60,8 +62,65 @@ func ExtractSpartanTokenPostCallback(location string) (string, error) {
 	}
 
 	if tokenValue == "" {
+		dumpSpartanTokenDebug(location, resp, cookies, fmt.Sprintf("cookie %q not present in response", tokenName))
 		return "", errors.Format("please retry in a few seconds", errors.ErrSpartanTokenGrabFailure)
 	}
 
 	return tokenValue, nil
+}
+
+// dumpSpartanTokenDebug writes diagnostic information to stderr and persists
+// the callback response body so we can inspect what halowaypoint.com actually
+// returned when the 343-spartan-token cookie isn't found. Called only on
+// failure.
+func dumpSpartanTokenDebug(requestedURL string, resp *http.Response, cookies []*http.Cookie, reason string) {
+	if !debug.Enabled() {
+		return
+	}
+
+	fmt.Fprintln(os.Stderr, "")
+	fmt.Fprintln(os.Stderr, "── spartan-token debug ────────────────────────")
+	fmt.Fprintf(os.Stderr, "Reason       : %s\n", reason)
+	fmt.Fprintf(os.Stderr, "Requested URL: %s\n", requestedURL)
+	fmt.Fprintf(os.Stderr, "Status       : %d %s\n", resp.StatusCode, resp.Status)
+	if loc := resp.Header.Get("Location"); loc != "" {
+		fmt.Fprintf(os.Stderr, "Location     : %s\n", loc)
+	}
+	if resp.Request != nil && resp.Request.URL != nil {
+		fmt.Fprintf(os.Stderr, "Final URL    : %s\n", resp.Request.URL.String())
+	}
+
+	if len(cookies) == 0 {
+		fmt.Fprintln(os.Stderr, "Cookies      : (none)")
+	} else {
+		names := make([]string, 0, len(cookies))
+		for _, c := range cookies {
+			names = append(names, c.Name)
+		}
+		fmt.Fprintf(os.Stderr, "Cookies      : %s\n", strings.Join(names, ", "))
+	}
+
+	// Echo selected response headers that often help diagnose redirects /
+	// auth failures (CSP, WWW-Authenticate, X-Frame-Options, etc.).
+	for _, h := range []string{"Content-Type", "WWW-Authenticate", "X-Halo-Error", "Cf-Mitigated"} {
+		if v := resp.Header.Get(h); v != "" {
+			fmt.Fprintf(os.Stderr, "%-13s: %s\n", h, v)
+		}
+	}
+
+	body, _ := io.ReadAll(resp.Body)
+	fmt.Fprintf(os.Stderr, "Body length  : %d bytes\n", len(body))
+
+	if home, err := os.UserHomeDir(); err == nil {
+		dir := filepath.Join(home, strings.ReplaceAll(configs.GetConfig().Name, " ", "-"))
+		path := filepath.Join(dir, "spartan-token-debug.html")
+		if mkErr := os.MkdirAll(dir, 0755); mkErr == nil {
+			if writeErr := os.WriteFile(path, body, 0644); writeErr == nil {
+				fmt.Fprintf(os.Stderr, "Body saved   : %s\n", path)
+			}
+		}
+	}
+
+	fmt.Fprintln(os.Stderr, "───────────────────────────────────────────────")
+	fmt.Fprintln(os.Stderr, "")
 }
