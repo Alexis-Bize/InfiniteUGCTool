@@ -92,7 +92,7 @@ func Authenticate(credentials msa.LiveCredentials, page *AuthorizePageResponse) 
 		if err != nil {
 			return nil, err
 		}
-		return requestOneTimeCode(credentials.Email, serverData, cookie)
+		return requestOneTimeCode(credentials.Email, body, serverData, cookie)
 
 	case isKMSIPage(body):
 		// "Keep me signed in?" interstitial on the Fluent v2 UI.
@@ -237,12 +237,49 @@ func dumpAuthFailureDebug(resp *http.Response, body []byte) {
 	fmt.Fprintln(os.Stderr, "")
 }
 
-func requestOneTimeCode(email string, serverData gjson.Result, cookie string) (*http.Response, error) {
+// extractDefaultProof returns the `data` field of the user's default 2FA
+// proof method. The Fluent v2 page renamed the legacy `p` array to
+// `arrUserProofs`; we accept either and prefer the entry flagged as the
+// default Strong Auth method (`isSADef: true`), falling back to the last
+// entry (which mirrors the legacy `p|@reverse|0|data` heuristic).
+func extractDefaultProof(serverData gjson.Result) string {
+	proofs := serverData.Get("arrUserProofs")
+	if !proofs.Exists() {
+		proofs = serverData.Get("p")
+	}
+	if !proofs.IsArray() {
+		return ""
+	}
+
+	var chosen string
+	proofs.ForEach(func(_, v gjson.Result) bool {
+		if v.Get("isSADef").Bool() {
+			chosen = v.Get("data").Str
+			return false
+		}
+		return true
+	})
+	if chosen != "" {
+		return chosen
+	}
+
+	arr := proofs.Array()
+	if len(arr) > 0 {
+		return arr[len(arr)-1].Get("data").Str
+	}
+	return ""
+}
+
+func requestOneTimeCode(email string, originalBody []byte, serverData gjson.Result, cookie string) (*http.Response, error) {
 	sFT := serverData.Get("sFT").Str
 	urlPost := serverData.Get("urlPost").Str
-	proof := serverData.Get("p|@reverse|0|data").Str
+	proof := extractDefaultProof(serverData)
 
 	if sFT == "" || urlPost == "" || proof == "" {
+		dumpOTCDebug(
+			fmt.Sprintf("ServerData fields missing — sFT=%t urlPost=%t proof=%t", sFT != "", urlPost != "", proof != ""),
+			nil, originalBody,
+		)
 		return nil, errors.Format("the authentication has failed", errors.ErrAuthFailure)
 	}
 
@@ -291,10 +328,95 @@ func requestOneTimeCode(email string, serverData gjson.Result, cookie string) (*
 	defer resp.Body.Close()
 
 	if resp.StatusCode == 200 {
+		otcBody, _ := io.ReadAll(resp.Body)
+
+		// OTC accepted but MS routed us through the "Keep me signed in?"
+		// interstitial — same one we already handle after the credentials
+		// POST. Dismiss it and return its redirect.
+		if isKMSIPage(otcBody) {
+			return submitKMSI(otcBody, extractCookieHeader(resp.Header["Set-Cookie"]))
+		}
+
+		dumpOTCDebug("OTC POST returned 200 instead of a redirect (code rejected or unhandled interstitial)", resp, otcBody)
 		return resp, errors.Format("the authentication has failed", errors.ErrAuthFailure)
 	}
 
 	return resp, nil
+}
+
+// dumpOTCDebug writes diagnostic information to stderr and persists the
+// response body when something goes wrong in the OTC / 2FA flow — either
+// because the credentials-POST response that triggered us looked like a
+// legacy 2FA page but didn't actually contain the expected ServerData
+// fields, or because the OTC POST itself didn't return the expected
+// redirect.
+func dumpOTCDebug(reason string, resp *http.Response, body []byte) {
+	if !debug.Enabled() {
+		return
+	}
+
+	fmt.Fprintln(os.Stderr, "")
+	fmt.Fprintln(os.Stderr, "── OTC / 2FA debug ────────────────────────────")
+	fmt.Fprintf(os.Stderr, "Reason       : %s\n", reason)
+	if resp != nil {
+		fmt.Fprintf(os.Stderr, "Status       : %d %s\n", resp.StatusCode, resp.Status)
+		if resp.Request != nil && resp.Request.URL != nil {
+			fmt.Fprintf(os.Stderr, "Final URL    : %s\n", resp.Request.URL.String())
+		}
+		if loc := resp.Header.Get("Location"); loc != "" {
+			fmt.Fprintf(os.Stderr, "Location     : %s\n", loc)
+		}
+		cookies := resp.Cookies()
+		if len(cookies) > 0 {
+			names := make([]string, 0, len(cookies))
+			for _, c := range cookies {
+				names = append(names, c.Name)
+			}
+			fmt.Fprintf(os.Stderr, "Set-Cookie   : %s\n", strings.Join(names, ", "))
+		}
+	}
+
+	fmt.Fprintf(os.Stderr, "Body length  : %d bytes\n", len(body))
+
+	hints := []string{
+		"PROOF.Type",   // legacy 2FA marker
+		`"sFT"`,        // ServerData antiforgery token
+		`"urlPost"`,    // ServerData form action
+		`"p":[`,        // ServerData proof-methods array
+		"otc",
+		"incorrect",
+		"invalid",
+		"$Config",      // v2 Fluent MSAL UI
+		"hpgid",
+		"tfa-fluent",   // v2 2FA page bundle
+		"otp",
+		"Authenticator",
+		"verify",
+	}
+	for _, h := range hints {
+		fmt.Fprintf(os.Stderr, "Has %-15s: %v\n", "'"+h+"'", strings.Contains(string(body), h))
+	}
+
+	for _, marker := range []string{"sErrTxt", "sErrorCode", "hasError", "ErrorTitle"} {
+		if idx := strings.Index(string(body), marker); idx >= 0 {
+			start := max(0, idx-20)
+			end := min(len(body), idx+240)
+			fmt.Fprintf(os.Stderr, "%-13s ctx: ...%s...\n", marker, string(body[start:end]))
+		}
+	}
+
+	if home, err := os.UserHomeDir(); err == nil {
+		dir := filepath.Join(home, strings.ReplaceAll(configs.GetConfig().Name, " ", "-"))
+		path := filepath.Join(dir, "otc-debug.html")
+		if mkErr := os.MkdirAll(dir, 0755); mkErr == nil {
+			if writeErr := os.WriteFile(path, body, 0644); writeErr == nil {
+				fmt.Fprintf(os.Stderr, "Body saved   : %s\n", path)
+			}
+		}
+	}
+
+	fmt.Fprintln(os.Stderr, "───────────────────────────────────────────────")
+	fmt.Fprintln(os.Stderr, "")
 }
 
 // preAuthFromPage extracts the PPFT, urlPost, and login-page cookies from
